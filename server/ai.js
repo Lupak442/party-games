@@ -1,6 +1,8 @@
 /**
- * 단어 생성 모듈 (내장 데이터 및 Google Gemini AI)
- * 내장 단어 목록은 server/data/builtins.json 에서 쉽게 관리/추가/수정할 수 있습니다.
+ * 단어 생성 모듈 (완전히 독립된 3가지 모드):
+ * 1. 📚 내장 모드 (builtin) - server/data/builtins.json 에서만 단어 추출 (AI 절대 호출 안 함)
+ * 2. 🤖 AI 모드 (ai)       - Google Gemini AI를 무조건 호출하여 실시간 생성 (내장 주제와 같아도 AI가 생성)
+ * 3. ✍️ 직접 모드 (custom)  - 사용자가 직접 입력한 단어 사용
  */
 const fs = require('fs');
 const path = require('path');
@@ -23,7 +25,7 @@ function loadBuiltins() {
 }
 
 function hasAiKey() {
-  return !!process.env.GEMINI_API_KEY;
+  return !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0;
 }
 
 function getBuiltinTopics() {
@@ -56,26 +58,32 @@ async function gemini(prompt) {
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key.trim() },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: 'application/json', temperature: 1 },
     }),
     signal: AbortSignal.timeout(25000),
   });
-  if (!res.ok) throw new Error('AI 응답 오류 ' + res.status);
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`AI 응답 오류 (${res.status}): ${errBody.slice(0, 100)}`);
+  }
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
   return JSON.parse(text);
 }
 
-const NO_AI_MSG = 'AI 키가 설정되지 않았습니다. 내장 주제 모드를 선택하시거나 .env / Render 환경변수에 GEMINI_API_KEY를 등록해주세요.';
-
-/** 라이어 게임용 단어 쌍 */
+/** 
+ * 라이어 게임용 단어 쌍 생성 
+ * mode: 'builtin' (내장 모드) | 'ai' (AI 모드)
+ */
 async function generateLiarWords({ topic, fool, mode = 'builtin', avoid = [] }) {
-  // AI 모드 요청인 경우
+  // 1. 🤖 AI 모드: 주제가 무엇이든 무조건 Gemini AI를 호출하여 새로운 단어 생성
   if (mode === 'ai') {
-    if (!hasAiKey()) throw new Error(NO_AI_MSG);
+    if (!hasAiKey()) {
+      throw new Error('AI 키가 등록되어 있지 않습니다. Render 환경변수(Environment) 또는 로컬 .env 파일에 GEMINI_API_KEY를 등록해주세요.');
+    }
     try {
       const r = await gemini(
         `한국어 단어 게임용 단어를 만들어줘. 주제: "${topic}".\n` +
@@ -87,23 +95,17 @@ async function generateLiarWords({ topic, fool, mode = 'builtin', avoid = [] }) 
       if (r && r.word && (!fool || r.similar)) {
         return { word: String(r.word).trim(), similar: String(r.similar || '').trim() };
       }
+      throw new Error('AI가 올바른 JSON 형식을 반환하지 않았습니다.');
     } catch (e) {
       console.error('AI 생성 오류:', e.message);
       throw new Error(`AI 단어 생성 실패: ${e.message}`);
     }
   }
 
-  // 내장 주제 모드 (또는 기본)
+  // 2. 📚 내장 모드: server/data/builtins.json 에서만 단어 추출 (절대 AI 호출하지 않음)
   const list = builtinFor(topic);
   if (!list || list.length < 2) {
-    if (mode === 'builtin') {
-      throw new Error(`내장 주제 "${topic}"을 찾을 수 없거나 단어가 부족합니다. (내장 주제: ${getBuiltinTopics().map(t=>t.name).join(', ')})`);
-    }
-    // AI 키가 있으면 시도
-    if (hasAiKey()) {
-      return generateLiarWords({ topic, fool, mode: 'ai', avoid });
-    }
-    throw new Error(NO_AI_MSG);
+    throw new Error(`내장 주제 "${topic}"을 찾을 수 없거나 단어가 부족합니다. (내장 주제: ${getBuiltinTopics().map(t=>t.name).join(', ')})`);
   }
 
   const pool = shuffle(list.filter((w) => !avoid.includes(w)));
@@ -111,10 +113,16 @@ async function generateLiarWords({ topic, fool, mode = 'builtin', avoid = [] }) 
   return { word: base[0], similar: base[1] };
 }
 
-/** 스피드 퀴즈용 문제 목록 */
+/** 
+ * 스피드 퀴즈용 문제 목록 생성
+ * mode: 'builtin' (내장 모드) | 'ai' (AI 모드)
+ */
 async function generateQuizWords({ topic, count, mode = 'builtin', avoid = [] }) {
+  // 1. 🤖 AI 모드: 주제가 무엇이든 무조건 Gemini AI를 호출하여 생성
   if (mode === 'ai') {
-    if (!hasAiKey()) throw new Error(NO_AI_MSG);
+    if (!hasAiKey()) {
+      throw new Error('AI 키가 등록되어 있지 않습니다. Render 환경변수(Environment) 또는 로컬 .env 파일에 GEMINI_API_KEY를 등록해주세요.');
+    }
     try {
       const r = await gemini(
         `스피드 퀴즈 문제를 만들어줘. 주제: "${topic}".\n` +
@@ -125,18 +133,17 @@ async function generateQuizWords({ topic, count, mode = 'builtin', avoid = [] })
       );
       const items = [...new Set((r?.items || []).map((x) => String(x).trim()).filter(Boolean))];
       if (items.length >= count) return items.slice(0, count);
+      throw new Error(`AI가 생성한 문제 수가 부족합니다 (${items.length}/${count}개).`);
     } catch (e) {
       console.error('AI 퀴즈 생성 오류:', e.message);
       throw new Error(`AI 퀴즈 생성 실패: ${e.message}`);
     }
   }
 
+  // 2. 📚 내장 모드: server/data/builtins.json 에서만 추출
   const list = builtinFor(topic);
   if (!list) {
-    if (hasAiKey()) {
-      return generateQuizWords({ topic, count, mode: 'ai', avoid });
-    }
-    throw new Error(NO_AI_MSG);
+    throw new Error(`내장 주제 "${topic}"이(가) 없습니다. (내장 주제 목록: ${getBuiltinTopics().map(t=>t.name).join(', ')})`);
   }
 
   if (list.length < count) {
