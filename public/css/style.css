@@ -274,5 +274,54 @@ button.chip:hover { background: rgba(255,255,255,.2); }
 .low .rain { position: absolute; right: 58px; top: 2px; font-size: 1.1rem; animation: drip 1.6s ease-in-out infinite; filter: none; }
 @keyframes drip { 50% { transform: translateY(6px); opacity: .6; } }
 
+/* 블랙잭 게임 스타일 */
+.bj-container { animation: rise .35s both; }
+.bj-table { position: relative; overflow: hidden; }
+.dealer-box { background: linear-gradient(145deg, rgba(16,70,45,.4), rgba(6,40,25,.3)); border-color: rgba(52,211,153,.35); }
+.my-box { background: linear-gradient(145deg, rgba(30,27,75,.5), rgba(49,46,129,.4)); border-color: rgba(139,92,246,.4); }
+.bust-glow { box-shadow: 0 0 30px rgba(244,63,94,.4) !important; border-color: rgba(244,63,94,.6) !important; }
+.bj-glow { box-shadow: 0 0 35px rgba(251,191,36,.5) !important; border-color: rgba(251,191,36,.7) !important; }
+
+.bj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.score-badge { padding: 4px 12px; border-radius: 999px; background: rgba(0,0,0,.35); font-weight: 800; font-size: .95rem; border: 1px solid var(--glass-b); }
+.score-badge.bust { background: rgba(244,63,94,.3); color: #fecdd3; border-color: var(--red); }
+.score-badge.bj { background: linear-gradient(135deg, #f59e0b, #fde047); color: #3b2300; font-weight: 900; animation: bounce 1.2s infinite; }
+
+.bj-cards { display: flex; flex-wrap: wrap; gap: 10px; min-height: 110px; align-items: center; justify-content: center; padding: 6px 0; }
+.bj-card { width: 72px; height: 104px; border-radius: 12px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.35); display: flex; flex-direction: column; justify-content: space-between; padding: 6px; position: relative; animation: pop .25s both; user-select: none; }
+.bj-card.red { color: #dc2626; }
+.bj-card.black { color: #1e293b; }
+.c-corner { display: flex; flex-direction: column; line-height: 1; font-size: .85rem; font-weight: 800; }
+.c-corner.btm { transform: rotate(180deg); }
+.c-center { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.2rem; opacity: .85; pointer-events: none; }
+.bj-card.hidden { background: linear-gradient(135deg, #1e1b4b, #312e81); border: 2px solid rgba(255,255,255,.2); }
+.bj-card-back { width: 100%; height: 100%; border-radius: 8px; border: 1px dashed rgba(255,255,255,.3); display: grid; place-items: center; color: var(--gold); font-size: 1.8rem; }
+
+/* 배팅 칩 */
+.bet-chips { display: flex; justify-content: center; gap: 14px; margin: 20px 0; }
+.bet-chip { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(145deg, #f59e0b, #d97706); color: #fff; font-size: 1.15rem; font-weight: 900; border: 4px dashed rgba(255,255,255,.5); box-shadow: 0 8px 24px rgba(217,119,6,.4); cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.bet-chip:hover:not(:disabled) { transform: translateY(-4px) scale(1.08); box-shadow: 0 12px 30px rgba(217,119,6,.6); }
+.bet-chip.selected { outline: 4px solid #fff; outline-offset: 3px; transform: scale(1.1); }
+
+/* 다른 유저들 미니 상태 */
+.bj-others { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.bj-player-pill { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.05); font-size: .9rem; }
+.bj-player-pill.done { border-left: 4px solid var(--green); }
+.bj-player-pill.bust { border-left: 4px solid var(--red); opacity: .7; }
+.bj-player-pill.waiting { border-left: 4px solid var(--gold); }
+
+/* 판정 결과 리스트 */
+.bj-results-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.bj-res-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid var(--glass-b); }
+.bj-res-row.res-win { border-color: rgba(52,211,153,.5); background: rgba(52,211,153,.1); }
+.bj-res-row.res-push { border-color: rgba(251,191,36,.5); background: rgba(251,191,36,.1); }
+.bj-res-row.res-lose { border-color: rgba(244,63,94,.5); background: rgba(244,63,94,.1); }
+.res-who { display: flex; flex-direction: column; }
+.res-who small { color: var(--muted); }
+.res-tag { font-weight: 700; font-size: .9rem; }
+.res-delta { font-weight: 900; font-size: 1.2rem; min-width: 48px; text-align: right; }
+.res-delta.plus { color: #34d399; }
+.res-delta.minus { color: #fb7185; }
+
 @media (max-width: 380px) { .game-grid { grid-template-columns: 1fr; } .trio { grid-template-columns: 1fr 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
