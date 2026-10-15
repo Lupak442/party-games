@@ -56,12 +56,14 @@ async function gemini(prompt) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('NO_KEY');
 
-  // 사용자가 지정한 모델 또는 공식 지원 모델 후보들
+  // 사용자 요청 우선순위: Gemini 4 Argon -> Gemini 3.8 Flash -> Gemini 3.7 Flash
   const models = [
     process.env.GEMINI_MODEL,
-    'gemini-1.5-flash',
+    'gemini-4-argon',
+    'gemini-3.8-flash',
+    'gemini-3.7-flash',
     'gemini-2.0-flash',
-    'gemini-1.5-pro'
+    'gemini-1.5-flash'
   ].filter(Boolean);
 
   let lastErr = null;

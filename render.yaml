@@ -10,4 +10,4 @@ services:
       - key: GEMINI_API_KEY
         sync: false   # Render 대시보드에서 직접 입력
       - key: GEMINI_MODEL
-        value: gemini-1.5-flash
+        value: gemini-4-argon
