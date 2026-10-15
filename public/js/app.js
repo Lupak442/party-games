@@ -202,7 +202,14 @@ function gameTab() {
   }
   const meta = st.catalog.find((g) => g.id === st.room.gameId);
   const ui = GameUI[st.room.gameId];
-  const ctx = { G: st.game, me: st.me, room: st.room, isHost, nm: (id) => (st.room.players.find((p) => p.id === id) || { name: '?' }).name };
+  const ctx = {
+    G: st.game,
+    me: st.me,
+    room: st.room,
+    isHost,
+    appMeta: st.meta || { hasAi: false, builtinTopics: [] },
+    nm: (id) => (st.room.players.find((p) => p.id === id) || { name: '?' }).name
+  };
   return `<div class="stack">
     <div class="game-head"><span>${meta.icon} ${esc(meta.name)}</span>
       ${isHost ? `<button class="btn ghost sm" data-send="room.endGame" data-confirm="게임을 끝내고 목록으로 돌아갈까요?">게임 끝내기</button>` : ''}</div>

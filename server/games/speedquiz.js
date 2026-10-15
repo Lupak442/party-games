@@ -9,7 +9,7 @@ function applySettings(s, pl) {
   s.passes = clampInt(pl.passes, 0, 20, s.passes);
   s.count = clampInt(pl.count, 1, 40, s.count);
   s.topic = String(pl.topic ?? s.topic).slice(0, 30);
-  s.source = pl.source === 'custom' ? 'custom' : pl.source === 'ai' ? 'ai' : s.source;
+  s.source = pl.source === 'custom' ? 'custom' : pl.source === 'ai' ? 'ai' : 'builtin';
 }
 
 function newTurn() { return { correct: [], passed: [], idx: 0, startedAt: 0, endsAt: 0, elapsedMs: 0, done: false }; }
@@ -51,7 +51,7 @@ module.exports = {
   minPlayers: 2,
 
   init() {
-    return { phase: 'setup', teams: {}, reps: {}, settings: { time: 60, passes: 3, count: 10, topic: '', source: 'ai' }, error: null };
+    return { phase: 'setup', teams: {}, reps: {}, settings: { time: 60, passes: 3, count: 10, topic: '국내 드라마', source: 'builtin' }, error: null };
   },
 
   async handle(room, p, type, pl, ctx) {
@@ -97,7 +97,7 @@ module.exports = {
         if (!s.topic.trim()) throw fail('주제를 입력해주세요');
         g.phase = 'loading'; ctx.broadcast(room);
         try {
-          const list = await ctx.ai.generateQuizWords({ topic: s.topic, count: s.count * 2 });
+          const list = await ctx.ai.generateQuizWords({ topic: s.topic, count: s.count * 2, mode: s.source });
           if (stale() || g.phase !== 'loading') return;
           g.words.red = list.slice(0, s.count); g.words.blue = list.slice(s.count, s.count * 2);
           g.phase = 'ready';

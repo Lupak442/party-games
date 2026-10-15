@@ -14,16 +14,25 @@ GameUI.speedquiz = {
     </div>`;
   },
 
-  p_setup({ G, isHost }) {
+  p_setup({ G, isHost, appMeta }) {
     const s = G.settings;
     const teams = `<div class="teams">${this.teamBox(G, 'red', isHost, 'setRep')}${this.teamBox(G, 'blue', isHost, 'setRep')}</div>`;
+    const builtins = (appMeta && appMeta.builtinTopics && appMeta.builtinTopics.length)
+      ? appMeta.builtinTopics
+      : [
+          { name: '국내 드라마', count: 22 }, { name: '영화', count: 22 }, { name: '예능', count: 22 },
+          { name: '가수', count: 22 }, { name: '음식', count: 22 }, { name: '동물', count: 22 },
+          { name: '직업', count: 22 }, { name: '스포츠', count: 22 }
+        ];
+
+    const sourceName = s.source === 'builtin' ? '📚 내장 주제' : s.source === 'ai' ? '🤖 AI 출제' : '✍️ 대표 직접 입력';
+
     if (!isHost) {
       return `<div class="glass"><h3>⚡ 팀 구성</h3>${teams}
         ${G.teams.none.length ? `<p class="hint">미배정: ${G.teams.none.map((p) => esc(p.name)).join(', ')}</p>` : ''}</div>
-        <div class="glass"><b>설정</b><p class="muted">주제 ${s.source === 'ai' ? esc(s.topic || '(미정)') + ' (AI)' : '직접 입력'} · ${s.count}문제 · ${s.time}초 · 패스 ${s.passes}번</p></div>
+        <div class="glass"><b>설정</b><p class="muted">출제: ${sourceName} ${s.source !== 'custom' ? `(${esc(s.topic || '기본')})` : ''} · ${s.count}문제 · ${s.time}초 · 패스 ${s.passes}번</p></div>
         <p class="pulse-text center">방장이 준비하는 중…</p>`;
     }
-    const assign = [...G.teams.red, ...G.teams.blue, ...G.teams.none]; // 현재 모든 인원 표시용
     const all = [];
     ['red', 'blue', 'none'].forEach((t) => G.teams[t].forEach((p) => all.push({ ...p, team: t })));
     return `<div class="glass"><div class="row-between"><h3>⚡ 팀 나누기</h3><button class="btn ghost sm" data-send="game.randomTeams">🎲 랜덤</button></div>
@@ -35,16 +44,42 @@ GameUI.speedquiz = {
     <div class="glass" id="sqForm"><h3>설정</h3>${G.error ? `<p class="err">${esc(G.error)}</p>` : ''}
       <label class="field"><span>문제 출처</span>
         <select name="source" data-change-send="game.settings" data-collect="#sqForm">
-          <option value="ai" ${s.source === 'ai' ? 'selected' : ''}>🤖 AI가 주제에 맞게 출제</option>
-          <option value="custom" ${s.source === 'custom' ? 'selected' : ''}>✍️ 팀 대표가 직접 입력</option></select></label>
-      ${s.source === 'ai' ? `<label class="field"><span>주제 (예: 국내 드라마)</span><input name="topic" maxlength="30" value="${esc(s.topic)}" data-change-send="game.settings" data-collect="#sqForm" placeholder="주제 입력" autocomplete="off" /></label>`
-        : '<p class="hint">각 팀 대표가 <b>상대 팀이 맞힐 문제</b>를 직접 적어요 (난이도 조절 가능)</p>'}
+          <option value="builtin" ${s.source === 'builtin' ? 'selected' : ''}>📚 내장 주제에서 출제 (추천)</option>
+          <option value="ai" ${s.source === 'ai' ? 'selected' : ''}>🤖 AI가 주제에 맞게 자동 생성</option>
+          <option value="custom" ${s.source === 'custom' ? 'selected' : ''}>✍️ 팀 대표가 직접 입력</option>
+        </select>
+      </label>
+
+      ${s.source === 'builtin' ? `
+        <label class="field"><span>내장 주제 선택</span>
+          <select name="topic" data-change-send="game.settings" data-collect="#sqForm">
+            ${builtins.map((b) => `<option value="${esc(b.name)}" ${s.topic === b.name ? 'selected' : ''}>${esc(b.name)} (${b.count}문제 보유)</option>`).join('')}
+          </select>
+        </label>
+        <p class="hint">💡 <b>server/data/builtins.json</b> 파일에 단어를 추가하면 바로 반영돼요!</p>
+      ` : ''}
+
+      ${s.source === 'ai' ? `
+        <div class="ai-badge ${appMeta && appMeta.hasAi ? 'ok' : 'warn'}">
+          ${appMeta && appMeta.hasAi ? '🟢 Gemini AI 연결됨' : '🟠 GEMINI_API_KEY 미설정 (내장 주제 추천)'}
+        </div>
+        <label class="field"><span>주제 입력 (예: 국내 드라마, 90년대 가요)</span>
+          <input name="topic" maxlength="30" value="${esc(s.topic)}" data-change-send="game.settings" data-collect="#sqForm" placeholder="주제 입력" autocomplete="off" />
+        </label>
+      ` : ''}
+
+      ${s.source === 'custom' ? `
+        <p class="hint">각 팀 대표가 <b>상대 팀이 맞힐 문제</b>를 직접 적어요 (난이도 조절 가능)</p>
+      ` : ''}
+
       <div class="trio">
         <label class="field"><span>문제 수</span><input name="count" type="number" min="1" max="40" value="${s.count}" data-change-send="game.settings" data-collect="#sqForm" /></label>
         <label class="field"><span>제한시간(초)</span><input name="time" type="number" min="10" max="600" value="${s.time}" data-change-send="game.settings" data-collect="#sqForm" /></label>
         <label class="field"><span>패스 횟수</span><input name="passes" type="number" min="0" max="20" value="${s.passes}" data-change-send="game.settings" data-collect="#sqForm" /></label>
       </div>
-      <button class="btn primary block" data-send="game.start" data-collect="#sqForm">${s.source === 'ai' ? '🤖 문제 만들고 시작' : '✍️ 문제 입력 단계로'}</button>
+      <button class="btn primary block" data-send="game.start" data-collect="#sqForm">
+        ${s.source === 'custom' ? '✍️ 문제 입력 단계로' : '▶ 퀴즈 시작'}
+      </button>
     </div>`;
   },
 

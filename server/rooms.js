@@ -75,6 +75,10 @@ function viewFor(room, p) {
       gameId: room.game ? room.game.id : null,
       players: room.players.map((x) => ({ id: x.id, name: x.name, score: x.score, joinedAt: x.joinedAt, online: isOnline(room, x.id) })),
     },
+    meta: {
+      hasAi: ai.hasAiKey(),
+      builtinTopics: ai.getBuiltinTopics(),
+    },
     catalog: games.catalog(),
     game: room.game ? games.get(room.game.id).view(room, p) : null,
   };

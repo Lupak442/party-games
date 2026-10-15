@@ -181,6 +181,26 @@ button.chip:hover { background: rgba(255,255,255,.2); }
 .end.citizen-win { border-color: rgba(52,211,153,.6); box-shadow: 0 0 40px rgba(52,211,153,.3); }
 #guessForm input { text-align: center; font-size: 1.3rem; margin-top: 10px; }
 
+/* 모드 선택 & 내장 주제 칩 */
+.mode-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: rgba(0,0,0,.35); padding: 5px; border-radius: 14px; margin: 10px 0 14px; }
+.mode-tab { padding: 9px 4px; border-radius: 10px; background: transparent; font-size: .85rem; font-weight: 700; color: var(--muted); transition: .2s; text-align: center; }
+.mode-tab.on { background: var(--grad); color: #fff; box-shadow: 0 4px 12px rgba(168,85,247,.35); }
+.topic-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.topic-chip { cursor: pointer; transition: transform .15s, background .2s, border-color .2s; }
+.topic-chip:hover { transform: translateY(-2px); }
+.topic-chip.sel { background: rgba(236,72,153,.35); border-color: var(--pink); color: #fff; font-weight: 700; box-shadow: 0 0 14px rgba(236,72,153,.4); transform: scale(1.05); }
+.ai-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: .8rem; font-weight: 700; margin-bottom: 8px; }
+.ai-badge.ok { background: rgba(52,211,153,.2); color: #a7f3d0; border: 1px solid rgba(52,211,153,.4); }
+.ai-badge.warn { background: rgba(251,191,36,.2); color: #fde68a; border: 1px solid rgba(251,191,36,.4); }
+
+/* 라이어 오타 판정 박스 */
+.judge-box { padding: 22px 16px; border: 1px solid rgba(251,191,36,.4); box-shadow: 0 0 30px rgba(251,191,36,.2); }
+.compare-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; padding: 14px; border-radius: 16px; background: rgba(0,0,0,.3); }
+.c-item { display: flex; flex-direction: column; gap: 4px; }
+.c-word { font-size: 1.8rem; color: var(--green); word-break: keep-all; }
+.c-guess { font-size: 1.8rem; color: var(--gold); word-break: keep-all; }
+.judge-desc { font-size: .9rem; line-height: 1.5; color: #fde68a; background: rgba(251,191,36,.12); padding: 10px 14px; border-radius: 12px; margin: 0 0 14px; }
+
 /* 스피드 퀴즈 */
 .teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .team { padding: 12px; border-radius: 16px; border: 1px solid; }
