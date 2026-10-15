@@ -336,5 +336,106 @@ button.chip:hover { background: rgba(255,255,255,.2); }
 .res-delta.plus { color: #34d399; }
 .res-delta.minus { color: #fb7185; }
 
+/* ===== 바퀴벌레 포커 (Cockroach Poker) 스타일 ===== */
+.cr-hero-icon { font-size: 3.5rem; animation: float 2.5s ease-in-out infinite; }
+.cr-rule-card { background: rgba(15,23,42,.6); border: 1px solid rgba(255,255,255,.1); }
+.cr-rule-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: .88rem; line-height: 1.4; }
+.text-danger { color: #f43f5e; }
+.text-accent { color: #38bdf8; }
+
+/* 직전 턴 안내 */
+.cr-last-event { border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; font-size: .88rem; line-height: 1.4; animation: popIn .3s ease-out; }
+.cr-last-event.event-correct { background: rgba(52,211,153,.15); border: 1px solid rgba(52,211,153,.4); }
+.cr-last-event.event-wrong { background: rgba(244,63,94,.15); border: 1px solid rgba(244,63,94,.4); }
+.event-title { display: flex; justify-content: space-between; font-weight: 800; font-size: .95rem; margin-bottom: 4px; }
+
+/* 메인 액션 박스 */
+.cr-action-box { position: relative; border-radius: 16px; padding: 16px; border: 2px solid transparent; transition: all .3s ease; }
+.receiver-glow { border-color: rgba(236,72,153,.6); box-shadow: 0 0 25px rgba(236,72,153,.25); background: linear-gradient(145deg, rgba(30,27,75,.8), rgba(88,28,135,.4)); }
+.pass-glow { border-color: rgba(245,158,11,.6); box-shadow: 0 0 25px rgba(245,158,11,.25); background: linear-gradient(145deg, rgba(30,27,75,.8), rgba(120,53,15,.4)); }
+.active-turn-glow { border-color: rgba(56,189,248,.6); box-shadow: 0 0 25px rgba(56,189,248,.25); }
+
+.cr-turn-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+/* 미스터리 카드 & 주장 */
+.cr-claim-display { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 12px 0 16px 0; }
+.claim-bubble { background: rgba(255,255,255,.1); border-radius: 20px; padding: 8px 16px; font-size: 1rem; text-align: center; border: 1px solid rgba(255,255,255,.15); }
+.cr-mystery-card { width: 100px; height: 140px; border-radius: 14px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px dashed rgba(255,255,255,.3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,.4); animation: float 3s ease-in-out infinite; }
+.mystery-mark { font-size: 2.4rem; color: #fde047; }
+.mystery-hint { font-size: .75rem; color: var(--muted); font-weight: 700; }
+
+.cr-choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+/* 비밀 카드 확인 */
+.cr-secret-reveal { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; background: rgba(0,0,0,.3); border-radius: 12px; border: 1px solid rgba(245,158,11,.4); }
+.secret-label { font-size: .8rem; color: #fbbf24; font-weight: 700; }
+.secret-card { display: flex; align-items: center; gap: 8px; font-size: 1.5rem; font-weight: 800; color: #fff; }
+
+/* 선택형 칩 & 라디오 */
+.field-title { display: block; font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.cr-radio-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cr-chip-radio input { display: none; }
+.cr-chip-radio span { display: inline-block; padding: 7px 14px; border-radius: 20px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+.cr-chip-radio input:checked + span { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 12px rgba(56,189,248,.4); }
+
+.cr-radio-bugs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.cr-bug-radio input { display: none; }
+.cr-bug-radio .b-box { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); cursor: pointer; transition: all .15s; }
+.cr-bug-radio .b-icon { font-size: 1.4rem; }
+.cr-bug-radio .b-name { font-size: .75rem; font-weight: 700; }
+.cr-bug-radio input:checked + .b-box { background: rgba(236,72,153,.25); border-color: #ec4899; box-shadow: 0 0 10px rgba(236,72,153,.3); transform: scale(1.03); }
+
+/* 내 손패 선택 가로 스크롤 */
+.cr-hand-select-row { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px 2px; }
+.cr-hand-radio input { display: none; }
+.hand-card-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 65px; height: 85px; padding: 6px; border-radius: 12px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.2); cursor: pointer; transition: all .2s; }
+.tile-icon { font-size: 1.6rem; }
+.tile-name { font-size: .75rem; font-weight: 700; margin-top: 4px; }
+.cr-hand-radio input:checked + .hand-card-tile { border-color: #38bdf8; background: rgba(56,189,248,.2); box-shadow: 0 0 12px rgba(56,189,248,.4); transform: translateY(-4px); }
+
+/* 플레이어 수집 보드 */
+.cr-tables-board { padding: 14px; }
+.cr-board-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; flex-wrap: wrap; gap: 4px; }
+.cr-players-grid { display: flex; flex-direction: column; gap: 10px; }
+.cr-player-card { border-radius: 12px; padding: 10px 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); transition: border-color .2s; }
+.cr-player-card.is-me { border-color: rgba(56,189,248,.4); background: rgba(56,189,248,.05); }
+.cr-player-card.danger-alert { border-color: rgba(244,63,94,.6); background: rgba(244,63,94,.08); }
+
+.p-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.p-card-name { display: flex; align-items: center; gap: 8px; font-size: .95rem; }
+.p-hand-badge { font-size: .75rem; background: rgba(255,255,255,.1); padding: 2px 6px; border-radius: 8px; color: var(--muted); }
+.p-unique-badge { font-size: .8rem; color: var(--muted); background: rgba(255,255,255,.06); padding: 3px 8px; border-radius: 10px; }
+.badge-danger-blink { background: rgba(244,63,94,.3); color: #fff; animation: pulse 1s infinite; font-weight: 800; border: 1px solid #f43f5e; }
+
+.cr-danger-chip { font-size: .78rem; font-weight: 800; color: #f43f5e; margin: 4px 0 6px 0; background: rgba(244,63,94,.15); padding: 4px 8px; border-radius: 6px; }
+.cr-danger-chip.rainbow { color: #fbbf24; background: rgba(251,191,36,.15); }
+
+/* 8종 벌레 수집 아이콘 그리드 */
+.cr-bug-collection-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: 6px; }
+.cr-coll-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 2px; border-radius: 8px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.05); }
+.cr-coll-item.zero { opacity: .3; }
+.cr-coll-item.item-danger { border-color: #f43f5e; background: rgba(244,63,94,.2); animation: pulse 1s infinite; }
+.coll-icon { font-size: 1.15rem; line-height: 1; }
+.coll-count { font-size: .75rem; font-weight: 800; margin-top: 2px; }
+.coll-count.active { color: #38bdf8; }
+.item-danger .coll-count { color: #f43f5e; }
+
+/* 내 손패 영역 */
+.cr-my-hand-container { padding: 14px; }
+.cr-hand-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.cr-hand-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.cr-card-chip { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); font-size: .85rem; font-weight: 700; }
+.cr-chip-icon { font-size: 1.2rem; }
+
+/* 게임 종료 화면 */
+.cr-end-card { padding: 24px 16px; }
+.cr-loser-skull { font-size: 3.5rem; animation: wobble 2s ease-in-out infinite; }
+.cr-loser-box { margin: 16px 0; padding: 16px; border-radius: 14px; background: rgba(244,63,94,.15); border: 1.5px solid rgba(244,63,94,.4); }
+.loser-title { font-size: .85rem; color: #fb7185; font-weight: 700; }
+.loser-name { font-size: 1.6rem; font-weight: 900; margin: 4px 0; color: #fff; }
+.loser-reason { font-size: .95rem; margin-bottom: 6px; }
+.loser-penalty { font-size: 1.2rem; font-weight: 900; color: #f43f5e; }
+.cr-winners-box { padding: 10px; border-radius: 10px; background: rgba(52,211,153,.15); border: 1px solid rgba(52,211,153,.3); color: #34d399; font-weight: 700; font-size: .95rem; }
+
 @media (max-width: 380px) { .game-grid { grid-template-columns: 1fr; } .trio { grid-template-columns: 1fr 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
