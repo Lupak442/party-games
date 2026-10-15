@@ -13,8 +13,9 @@ const { liar, fool } = require('./liar');
 const speedquiz = require('./speedquiz');
 const blackjack = require('./blackjack');
 const cockroach = require('./cockroach');
+const dalmuti = require('./dalmuti');
 
-const list = [manito, liar, fool, speedquiz, blackjack, cockroach];
+const list = [manito, liar, fool, speedquiz, blackjack, cockroach, dalmuti];
 const byId = Object.fromEntries(list.map((g) => [g.id, g]));
 
 module.exports = {
