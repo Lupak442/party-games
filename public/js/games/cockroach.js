@@ -1,6 +1,6 @@
 /* ===== 바퀴벌레 포커 (Cockroach Poker) 게임 클라이언트 UI ===== */
 GameUI.cockroach = {
-  // 선택 상태 보존 (리렌더링 시에도 풀리지 않음)
+  // 사용자가 고른 선택값 보존
   sel: {
     cardId: null,
     to: null,
@@ -11,13 +11,28 @@ GameUI.cockroach = {
 
   setSel(key, val) {
     this.sel[key] = val;
-    // 부드러운 상태 반영을 위해 재렌더
+    if (typeof renderRoom === 'function') renderRoom();
+  },
+
+  // 손패 카드 클릭 시 처리
+  clickHandCard(cardId, bugId, isMyTurn, hasTurn, activeName) {
+    if (hasTurn) {
+      return toast('현재 진행 중인 카드가 있습니다! 먼저 참/거짓 판단이나 넘기기를 진행해주세요.', 'warn');
+    }
+    if (!isMyTurn) {
+      return toast(`현재는 [${activeName || '다른 플레이어'}]님의 차례입니다 ⏳ (내 차례가 되면 카드를 보낼 수 있어요)`, 'info');
+    }
+    this.sel.cardId = cardId;
+    // 주장할 동물이 비어있으면 현재 터치한 카드의 동물로 자동 제안
+    if (!this.sel.claim) {
+      this.sel.claim = bugId;
+    }
     if (typeof renderRoom === 'function') renderRoom();
   },
 
   sendOffer() {
     const s = this.sel;
-    if (!s.cardId) return toast('보낼 카드를 선택해주세요 🪳', 'err');
+    if (!s.cardId) return toast('보낼 카드를 내 손패에서 선택해주세요 🪳', 'err');
     if (!s.to) return toast('전달할 상대를 선택해주세요 👥', 'err');
     if (!s.claim) return toast('주장할 동물을 선택해주세요 🗣️', 'err');
     act('game.offer', { cardId: s.cardId, to: s.to, claim: s.claim });
@@ -110,8 +125,10 @@ GameUI.cockroach = {
   },
 
   /* ---- 2. 게임 플레이 화면 (play) ---- */
-  p_play({ G, me, state }) {
-    const isMyTurn = G.activePlayer && G.activePlayer.id === me.id;
+  p_play({ G, me }) {
+    // me는 문자열 ID 또는 객체일 수 있으므로 확실하게 ID 추출!
+    const myId = typeof me === 'object' && me ? me.id : me;
+    const isMyTurn = G.activePlayer && G.activePlayer.id === myId;
     const turn = G.turn;
     const bugs = G.bugs;
     const isSpectator = G.isSpectator;
@@ -131,10 +148,13 @@ GameUI.cockroach = {
       <!-- 1) 직전 턴 결과 안내 (있을 때만) -->
       ${G.lastEvent ? this.renderLastEvent(G.lastEvent) : ''}
 
-      <!-- 2) 메인 액션 카드 (진행 중인 턴 / 내 차례 선택 / 대기 / 관전) -->
-      ${turn ? this.renderTurnBox(turn, me, bugs, isSpectator) : this.renderOfferBox(isMyTurn, G, me, bugs, isSpectator)}
+      <!-- 2) 메인 액션 영역 (턴 진행 중 / 차례 액션 / 대기 / 관전) -->
+      ${turn ? this.renderTurnBox(turn, myId, bugs, isSpectator) : this.renderOfferBox(isMyTurn, G, myId, bugs, isSpectator)}
 
-      <!-- 3) 전체 플레이어의 모은 벌레 현황 보드 -->
+      <!-- 3) 내 손패 (My Hand) - 관전자가 아닐 때 메인 컨트롤러로 표시 -->
+      ${!isSpectator ? this.renderMyHandSection(G, isMyTurn, !!turn) : ''}
+
+      <!-- 4) 전체 플레이어의 모은 벌레 현황 보드 -->
       <div class="glass cr-tables-board">
         <div class="cr-board-header">
           <b>📊 테이블 수집 현황 (벌레 모음)</b>
@@ -142,29 +162,9 @@ GameUI.cockroach = {
         </div>
 
         <div class="cr-players-grid">
-          ${G.players.map((p) => this.renderPlayerTable(p, bugs, me.id)).join('')}
+          ${G.players.map((p) => this.renderPlayerTable(p, bugs, myId)).join('')}
         </div>
       </div>
-
-      <!-- 4) 내 손패 (My Hand) - 관전자가 아닐 때만 표시 -->
-      ${!isSpectator ? `
-        <div class="glass cr-my-hand-container">
-          <div class="cr-hand-header">
-            <b>내 손패 (${G.myHandCount}장 남음)</b>
-            <small class="muted">다른 사람은 볼 수 없어요</small>
-          </div>
-          <div class="cr-hand-list">
-            ${G.myHand.length === 0 ? `
-              <div class="muted center" style="padding:12px; width:100%;">손패가 모두 소진되었습니다!</div>
-            ` : G.myHand.map((card) => `
-              <div class="cr-card-chip">
-                <span class="cr-chip-icon">${card.bug.icon}</span>
-                <span class="cr-chip-name">${esc(card.bug.name)}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : ''}
     `;
   },
 
@@ -186,9 +186,9 @@ GameUI.cockroach = {
   },
 
   /* 턴 진행 중 (카드가 오가는 중) 박스 */
-  renderTurnBox(turn, me, bugs, isSpectator) {
-    const isReceiver = turn.to.id === me.id;
-    const isSender = turn.from.id === me.id;
+  renderTurnBox(turn, myId, bugs, isSpectator) {
+    const isReceiver = turn.to.id === myId;
+    const isSender = turn.from.id === myId;
 
     // 관전자의 시점
     if (isSpectator) {
@@ -264,7 +264,6 @@ GameUI.cockroach = {
     // 내가 카드를 확인하고 다른 사람에게 패스(토스)하는 단계
     if (isReceiver && turn.stage === 'pass') {
       const passCandidates = turn.passCandidates || [];
-      // 기본값 세팅
       if (!this.sel.passTo && passCandidates[0]) this.sel.passTo = passCandidates[0].id;
       if (!this.sel.passClaim) this.sel.passClaim = turn.claim.id;
 
@@ -355,8 +354,8 @@ GameUI.cockroach = {
     `;
   },
 
-  /* 턴 시작 전 (카드 낼 차례인 사람이 카드를 선택해 보내는) 박스 */
-  renderOfferBox(isMyTurn, G, me, bugs, isSpectator) {
+  /* 턴 시작 전 (카드 낼 차례인 사람이 상대와 주장을 골라 보내는) 박스 */
+  renderOfferBox(isMyTurn, G, myId, bugs, isSpectator) {
     if (isSpectator) {
       return `
         <div class="glass cr-action-box center">
@@ -378,48 +377,40 @@ GameUI.cockroach = {
     }
 
     const myHand = G.myHand || [];
-    const opponents = G.players.filter((p) => p.id !== me.id);
+    const opponents = G.players.filter((p) => p.id !== myId);
 
-    // 기본 선택값 자동 세팅 (유저가 터치 안 했어도 0번째 기본)
+    // 기본 선택값 자동 세팅
     if (!this.sel.cardId || !myHand.some((c) => c.id === this.sel.cardId)) {
       if (myHand[0]) this.sel.cardId = myHand[0].id;
     }
     if (!this.sel.to || !opponents.some((o) => o.id === this.sel.to)) {
       if (opponents[0]) this.sel.to = opponents[0].id;
     }
+    const currentCard = myHand.find((c) => c.id === this.sel.cardId);
     if (!this.sel.claim) {
-      // 내가 고른 카드의 동물로 기본 제안
-      const curCard = myHand.find((c) => c.id === this.sel.cardId);
-      this.sel.claim = curCard ? curCard.bug.id : bugs[0].id;
+      this.sel.claim = currentCard ? currentCard.bug.id : bugs[0].id;
     }
+
+    const targetOpp = opponents.find((o) => o.id === this.sel.to);
+    const claimedBug = bugs.find((b) => b.id === this.sel.claim);
 
     return `
       <div class="glass cr-action-box active-turn-glow">
         <div class="cr-turn-header">
-          <span class="badge ok">내 차례! 카드를 보내세요</span>
-          <small>손패에서 카드를 골라 상대에게 블러핑하세요</small>
+          <span class="badge ok">🎯 내 차례! 카드를 보내세요</span>
+          <small>아래 손패에서 카드를 골라 상대에게 블러핑하세요</small>
         </div>
 
-        <!-- 1) 보낼 카드 선택 -->
-        <div class="form-group" style="margin-top:10px;">
-          <label class="field-title">1. 내 손패에서 보낼 카드 선택 (터치하세요)</label>
-          <div class="cr-hand-select-scroll">
-            ${myHand.map((card) => {
-              const isSel = this.sel.cardId === card.id;
-              return `
-                <button type="button" class="cr-interactive-card ${isSel ? 'selected' : ''}" onclick="GameUI.cockroach.setSel('cardId', '${card.id}')">
-                  <span class="card-icon">${card.bug.icon}</span>
-                  <span class="card-name">${esc(card.bug.name)}</span>
-                  ${isSel ? '<span class="card-selected-badge">선택됨</span>' : ''}
-                </button>
-              `;
-            }).join('')}
-          </div>
+        <div class="cr-selected-card-banner">
+          <span class="banner-lbl">보낼 선택 카드:</span>
+          ${currentCard ? `
+            <span class="banner-card-badge">${currentCard.bug.icon} ${esc(currentCard.bug.name)}</span>
+          ` : '<span class="text-danger">아래 손패에서 카드를 터치하세요!</span>'}
         </div>
 
-        <!-- 2) 전달할 상대 선택 -->
-        <div class="form-group" style="margin-top:14px;">
-          <label class="field-title">2. 카드를 보낼 상대 선택</label>
+        <!-- 1) 전달할 상대 선택 -->
+        <div class="form-group" style="margin-top:12px;">
+          <label class="field-title">1. 카드를 보낼 상대 선택</label>
           <div class="cr-tiles-grid cr-opp-tiles">
             ${opponents.map((opp) => {
               const isSel = this.sel.to === opp.id;
@@ -433,9 +424,12 @@ GameUI.cockroach = {
           </div>
         </div>
 
-        <!-- 3) 상대에게 주장할 동물 선택 -->
+        <!-- 2) 상대에게 주장할 동물 선택 -->
         <div class="form-group" style="margin-top:14px;">
-          <label class="field-title">3. 상대에게 주장할 동물 선언 (진짜 or 거짓말)</label>
+          <label class="field-title">
+            2. 상대에게 주장할 동물 선언 
+            <small class="muted">(${currentCard && this.sel.claim === currentCard.bug.id ? '진실' : '거짓말'})</small>
+          </label>
           <div class="cr-tiles-grid cr-bug-tiles">
             ${bugs.map((b) => {
               const isSel = this.sel.claim === b.id;
@@ -451,8 +445,44 @@ GameUI.cockroach = {
         </div>
 
         <button class="btn primary block lg" onclick="GameUI.cockroach.sendOffer()" style="margin-top:16px;">
-          🃏 선택한 카드 상대에게 전달하기
+          🚀 ${targetOpp ? esc(targetOpp.name) : '상대'}에게 "${claimedBug ? claimedBug.name : ''}"라고 카드 전달하기
         </button>
+      </div>
+    `;
+  },
+
+  /* 내 손패 섹션 (터치하여 바로 카드 선택) */
+  renderMyHandSection(G, isMyTurn, hasTurn) {
+    const myHand = G.myHand || [];
+    const activeName = G.activePlayer ? G.activePlayer.name : '';
+
+    return `
+      <div class="glass cr-my-hand-container ${isMyTurn ? 'my-hand-active-glow' : ''}">
+        <div class="cr-hand-header">
+          <div class="hand-title-row">
+            <b>내 손패 (${G.myHandCount}장 남음)</b>
+            ${isMyTurn ? `
+              <span class="badge ok pulse">👆 보낼 카드를 터치하세요!</span>
+            ` : '<small class="muted">다른 사람은 볼 수 없어요</small>'}
+          </div>
+        </div>
+
+        <div class="cr-hand-select-scroll">
+          ${myHand.length === 0 ? `
+            <div class="muted center" style="padding:16px; width:100%;">손패가 모두 소진되었습니다!</div>
+          ` : myHand.map((card) => {
+            const isSel = isMyTurn && this.sel.cardId === card.id;
+            return `
+              <button type="button" 
+                      class="cr-interactive-card ${isSel ? 'selected' : ''} ${isMyTurn ? 'can-pick' : ''}" 
+                      onclick="GameUI.cockroach.clickHandCard('${card.id}', '${card.bug.id}', ${isMyTurn}, ${hasTurn}, '${esc(activeName)}')">
+                <span class="card-icon">${card.bug.icon}</span>
+                <span class="card-name">${esc(card.bug.name)}</span>
+                ${isSel ? '<span class="card-selected-badge">보낼 카드</span>' : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
       </div>
     `;
   },
