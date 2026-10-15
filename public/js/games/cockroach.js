@@ -150,8 +150,8 @@ GameUI.cockroach = {
       <!-- 2) 메인 액션 영역 (턴 진행 중 / 차례 액션 / 대기 / 관전) -->
       ${turn ? this.renderTurnBox(turn, myId, bugs, isSpectator) : this.renderOfferBox(isMyTurn, G, myId, bugs, isSpectator)}
 
-      <!-- 3) 내 손패 (My Hand) - 관전자가 아닐 때 메인 컨트롤러로 표시 -->
-      ${!isSpectator ? this.renderMyHandSection(G, isMyTurn, !!turn) : ''}
+      <!-- 3) 내 손패 (My Hand) - 내 차례 아닐 때 손패 확인용으로 표시 (내 차례일 땐 액션 폼 2단계에 포함) -->
+      ${!isSpectator && (!isMyTurn || turn) ? this.renderMyHandSection(G, isMyTurn, !!turn) : ''}
 
       <!-- 4) 전체 플레이어의 모은 벌레 현황 보드 -->
       <div class="glass cr-tables-board">
@@ -402,19 +402,12 @@ GameUI.cockroach = {
       <div class="glass cr-action-box active-turn-glow">
         <div class="cr-turn-header">
           <span class="badge ok">🎯 내 차례! 카드를 보내세요</span>
-          <small>아래 손패에서 카드를 골라 상대에게 블러핑하세요</small>
-        </div>
-
-        <div class="cr-selected-card-banner">
-          <span class="banner-lbl">보낼 선택 카드:</span>
-          ${currentCard ? `
-            <span class="banner-card-badge">${currentCard.bug.icon} ${esc(currentCard.bug.name)}</span>
-          ` : '<span class="text-danger">아래 손패에서 카드를 터치하세요!</span>'}
+          <small>상대 지목 ➔ 카드 선택 ➔ 블러핑 선언 순으로 진행하세요</small>
         </div>
 
         <!-- 1) 전달할 상대 선택 -->
-        <div class="form-group" style="margin-top:12px;">
-          <label class="field-title">1. 카드를 보낼 상대 선택</label>
+        <div class="form-group" style="margin-top:10px;">
+          <label class="field-title">1. 카드를 보낼 상대 지목</label>
           <div class="cr-tiles-grid cr-opp-tiles">
             ${opponents.map((opp) => {
               const isSel = this.sel.to === opp.id;
@@ -428,10 +421,32 @@ GameUI.cockroach = {
           </div>
         </div>
 
-        <!-- 2) 상대에게 주장할 동물 선택 -->
+        <!-- 2) 내 손패에서 보낼 카드 선택 -->
         <div class="form-group" style="margin-top:14px;">
           <label class="field-title">
-            2. 상대에게 주장할 동물 선언 
+            2. 내 손패에서 보낼 카드 선택 
+            ${currentCard ? `<span class="badge accent" style="margin-left:6px;">선택: ${currentCard.bug.icon} ${esc(currentCard.bug.name)}</span>` : ''}
+          </label>
+          <div class="cr-hand-select-scroll">
+            ${myHand.map((card) => {
+              const isSel = this.sel.cardId === card.id;
+              return `
+                <button type="button" 
+                        class="cr-interactive-card ${isSel ? 'selected' : ''} can-pick" 
+                        onclick="GameUI.cockroach.clickHandCard('${card.id}', '${card.bug.id}', true, false, '')">
+                  <span class="card-icon">${card.bug.icon}</span>
+                  <span class="card-name">${esc(card.bug.name)}</span>
+                  ${isSel ? '<span class="card-selected-badge">보낼 카드</span>' : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- 3) 상대에게 주장할 동물 선택 (블러핑) -->
+        <div class="form-group" style="margin-top:14px;">
+          <label class="field-title">
+            3. 상대에게 주장할 동물 선언 
             <small class="muted">(${currentCard && this.sel.claim === currentCard.bug.id ? '진실' : '거짓말'})</small>
           </label>
           <div class="cr-tiles-grid cr-bug-tiles">
