@@ -55,23 +55,49 @@ const shuffle = (a) => {
 async function gemini(prompt) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('NO_KEY');
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key.trim() },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 1 },
-    }),
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    throw new Error(`AI 응답 오류 (${res.status}): ${errBody.slice(0, 100)}`);
+
+  // 사용자가 지정한 모델 또는 공식 지원 모델 후보들
+  const models = [
+    process.env.GEMINI_MODEL,
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-pro'
+  ].filter(Boolean);
+
+  let lastErr = null;
+
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key.trim() },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 1 },
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        lastErr = new Error(`AI 응답 오류 [${model}] (${res.status}): ${errText.slice(0, 120)}`);
+        // 404인 경우 다음 모델 시도
+        if (res.status === 404) continue;
+        throw lastErr;
+      }
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
+      return JSON.parse(text);
+    } catch (e) {
+      lastErr = e;
+      // 404가 포함되어 있으면 다음 모델 계속 시도
+      if (e.message && e.message.includes('404')) continue;
+      throw e;
+    }
   }
-  const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
-  return JSON.parse(text);
+
+  throw lastErr || new Error('사용 가능한 Gemini AI 모델을 찾을 수 없습니다.');
 }
 
 /** 
