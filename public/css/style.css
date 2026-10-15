@@ -287,15 +287,28 @@ button.chip:hover { background: rgba(255,255,255,.2); }
 .score-badge.bust { background: rgba(244,63,94,.3); color: #fecdd3; border-color: var(--red); }
 .score-badge.bj { background: linear-gradient(135deg, #f59e0b, #fde047); color: #3b2300; font-weight: 900; animation: bounce 1.2s infinite; }
 
-.bj-cards { display: flex; flex-wrap: wrap; gap: 10px; min-height: 110px; align-items: center; justify-content: center; padding: 6px 0; }
-.bj-card { width: 72px; height: 104px; border-radius: 12px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.35); display: flex; flex-direction: column; justify-content: space-between; padding: 6px; position: relative; animation: pop .25s both; user-select: none; }
-.bj-card.red { color: #dc2626; }
-.bj-card.black { color: #1e293b; }
-.c-corner { display: flex; flex-direction: column; line-height: 1; font-size: .85rem; font-weight: 800; }
-.c-corner.btm { transform: rotate(180deg); }
-.c-center { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.2rem; opacity: .85; pointer-events: none; }
-.bj-card.hidden { background: linear-gradient(135deg, #1e1b4b, #312e81); border: 2px solid rgba(255,255,255,.2); }
-.bj-card-back { width: 100%; height: 100%; border-radius: 8px; border: 1px dashed rgba(255,255,255,.3); display: grid; place-items: center; color: var(--gold); font-size: 1.8rem; }
+.bj-cards { display: flex; flex-wrap: wrap; gap: 12px; min-height: 120px; align-items: center; justify-content: center; padding: 10px 0; }
+.bj-card { width: 78px; height: 114px; border-radius: 14px; background: #ffffff; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 8px 24px rgba(0,0,0,.45); display: flex; flex-direction: column; justify-content: space-between; padding: 7px 8px; position: relative; animation: pop .25s both; user-select: none; }
+.bj-card.red { color: #e11d48; }
+.bj-card.black { color: #0f172a; }
+
+.c-corner { display: flex; flex-direction: column; line-height: 1; font-weight: 900; }
+.c-corner.top { align-items: flex-start; }
+.c-corner.btm { align-items: flex-start; transform: rotate(180deg); }
+.c-corner .c-rank { font-size: 1.1rem; letter-spacing: -0.5px; }
+.c-corner .c-suit { font-size: .85rem; margin-top: 1px; }
+
+/* 카드 정중앙: 숫자가 메인 주인공! */
+.c-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.c-main-rank { font-size: 2.6rem; font-weight: 900; line-height: 1; letter-spacing: -1.5px; }
+.c-sub-row { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.c-main-suit { font-size: 1.25rem; line-height: 1; opacity: .85; }
+.c-face-icon { font-size: 1rem; line-height: 1; }
+
+.bj-card.hidden { background: linear-gradient(145deg, #1e1b4b, #312e81); border: 2px solid rgba(251,191,36,.4); }
+.bj-card-back { width: 100%; height: 100%; border-radius: 10px; border: 1.5px dashed rgba(251,191,36,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--gold); }
+.back-logo { font-size: 1.8rem; animation: wobble 3s ease-in-out infinite; }
+.bj-card-back small { font-size: .65rem; font-weight: 800; letter-spacing: 1px; color: #fde68a; }
 
 /* 배팅 칩 */
 .bet-chips { display: flex; justify-content: center; gap: 14px; margin: 20px 0; }

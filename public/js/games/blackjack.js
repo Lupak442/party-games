@@ -8,14 +8,40 @@ GameUI.blackjack = {
   renderCard(card) {
     if (!card) return '';
     if (card.hidden) {
-      return `<div class="bj-card hidden"><div class="bj-card-back">♠</div></div>`;
+      return `
+        <div class="bj-card hidden" title="딜러의 숨겨진 카드">
+          <div class="bj-card-back">
+            <span class="back-logo">🎲</span>
+            <small>HIDDEN</small>
+          </div>
+        </div>`;
     }
     const colorClass = card.color === 'red' ? 'red' : 'black';
-    return `<div class="bj-card ${colorClass}">
-      <div class="c-corner top"><span>${esc(card.rank)}</span><span>${card.suit}</span></div>
-      <div class="c-center">${card.suit}</div>
-      <div class="c-corner btm"><span>${esc(card.rank)}</span><span>${card.suit}</span></div>
-    </div>`;
+    const faceIcon = {
+      'A': '⭐',
+      'K': '👑',
+      'Q': '👸',
+      'J': '⚔️'
+    }[card.rank] || '';
+
+    return `
+      <div class="bj-card ${colorClass}">
+        <div class="c-corner top">
+          <span class="c-rank">${esc(card.rank)}</span>
+          <span class="c-suit">${card.suit}</span>
+        </div>
+        <div class="c-center">
+          <span class="c-main-rank">${esc(card.rank)}</span>
+          <div class="c-sub-row">
+            <span class="c-main-suit">${card.suit}</span>
+            ${faceIcon ? `<span class="c-face-icon">${faceIcon}</span>` : ''}
+          </div>
+        </div>
+        <div class="c-corner btm">
+          <span class="c-rank">${esc(card.rank)}</span>
+          <span class="c-suit">${card.suit}</span>
+        </div>
+      </div>`;
   },
 
   p_setup({ G, isHost }) {
@@ -185,19 +211,19 @@ GameUI.blackjack = {
         <h3>🏆 판정 결과</h3>
         <div class="bj-results-list">
           ${G.players.map((p) => {
-            const r = G.results[p.id] || { outcome: 'lose', delta: 0, desc: '' };
-            const isWin = r.outcome === 'win' || r.outcome === 'blackjack';
-            const isPush = r.outcome === 'push';
-            const cls = isWin ? 'res-win' : isPush ? 'res-push' : 'res-lose';
-            const outcomeName = {
-              blackjack: '🌟 블랙잭 대승',
-              win: '⭕ 승리',
-              push: '🤝 무승부 (Push)',
-              lose: '❌ 패배',
-              bust: '💥 버스트',
-            }[r.outcome] || '종료';
+      const r = G.results[p.id] || { outcome: 'lose', delta: 0, desc: '' };
+      const isWin = r.outcome === 'win' || r.outcome === 'blackjack';
+      const isPush = r.outcome === 'push';
+      const cls = isWin ? 'res-win' : isPush ? 'res-push' : 'res-lose';
+      const outcomeName = {
+        blackjack: '🌟 블랙잭 대승',
+        win: '⭕ 승리',
+        push: '🤝 무승부 (Push)',
+        lose: '❌ 패배',
+        bust: '💥 버스트',
+      }[r.outcome] || '종료';
 
-            return `
+      return `
               <div class="bj-res-row ${cls}">
                 <div class="res-who">
                   <b>${esc(p.name)}</b>
@@ -209,7 +235,7 @@ GameUI.blackjack = {
                 </div>
               </div>
             `;
-          }).join('')}
+    }).join('')}
         </div>
 
         ${isHost ? `
