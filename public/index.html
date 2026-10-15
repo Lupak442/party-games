@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0b0b1f" />
+  <meta name="description" content="친구들과 함께하는 실시간 파티 게임 - 마니또, 라이어 게임, 바보 라이어, 스피드 퀴즈" />
+  <title>파티 게임즈 · 친구들과 함께 노는 실시간 게임</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="bg-orbs" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div id="conn" class="conn" hidden>📡 연결이 끊겼어요 · 다시 연결하는 중… (내 자리는 그대로 있어요)</div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <!-- 랜딩 -->
+  <main id="landing" class="landing" hidden>
+    <header class="hero">
+      <div class="logo">🎲</div>
+      <h1>파티 게임즈</h1>
+      <p>여행 가서 친구들과 함께! 링크 하나로 바로 시작</p>
+    </header>
+
+    <section id="resumeBox" class="glass resume" hidden>
+      <div>
+        <b>진행 중이던 방이 있어요</b>
+        <span id="resumeInfo"></span>
+      </div>
+      <button class="btn primary sm" data-local="resume">돌아가기</button>
+    </section>
+
+    <section class="glass card-form">
+      <div class="seg" role="tablist">
+        <button id="segJoin" class="on" data-local="seg" data-v="join">방 참가</button>
+        <button id="segCreate" data-local="seg" data-v="create">방 만들기</button>
+      </div>
+
+      <label class="field"><span>내 이름</span>
+        <input id="inName" maxlength="12" placeholder="예) 민수" autocomplete="off" />
+      </label>
+
+      <div id="formJoin">
+        <label class="field"><span>초대코드</span>
+          <input id="inCode" maxlength="5" placeholder="ABCDE" autocomplete="off" autocapitalize="characters" class="code-input" />
+        </label>
+        <div id="previewBox" class="preview" hidden></div>
+        <button id="btnJoin" class="btn primary block" data-local="join">입장하기</button>
+      </div>
+
+      <div id="formCreate" hidden>
+        <label class="field"><span>최대 인원 <b id="maxVal">8</b>명</span>
+          <input id="inMax" type="range" min="2" max="30" value="8" />
+        </label>
+        <button id="btnCreate" class="btn primary block" data-local="create">방 만들고 방장 되기 👑</button>
+      </div>
+      <p id="landErr" class="err" hidden></p>
+    </section>
+  </main>
+
+  <!-- 방 -->
+  <div id="room" class="room" hidden>
+    <header class="topbar">
+      <div class="room-id">
+        <small>초대코드</small>
+        <button id="codeBtn" data-local="share"><b id="roomCode">-----</b> <span>🔗</span></button>
+      </div>
+      <div class="me-chip" id="meChip"></div>
+    </header>
+    <main id="roomBody" class="body"></main>
+    <nav class="tabs">
+      <button data-local="tab" data-v="game" id="tab-game"><i>🎮</i>게임</button>
+      <button data-local="tab" data-v="rank" id="tab-rank"><i>🏆</i>랭킹</button>
+      <button data-local="tab" data-v="people" id="tab-people"><i>👥</i>사람들</button>
+    </nav>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/games/manito.js"></script>
+  <script src="/js/games/liar.js"></script>
+  <script src="/js/games/speedquiz.js"></script>
+  <script src="/js/boot.js"></script>
+</body>
+</html>

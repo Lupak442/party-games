@@ -1,0 +1,15 @@
+{
+  "name": "party-games",
+  "version": "1.0.0",
+  "description": "친구들과 함께하는 실시간 파티 게임 (마니또, 라이어, 바보 라이어, 스피드 퀴즈)",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
