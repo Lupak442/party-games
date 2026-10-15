@@ -214,11 +214,14 @@ module.exports = {
         if (g.turn.stage !== 'respond') return;
         if (p.id !== g.turn.to) throw fail('카드를 받은 사람만 넘길 수 있어요');
 
-        // 아직 카드를 보지 않은 후보자들
-        const candidates = g.participants.filter((id) => !g.turn.seenBy.includes(id));
-        if (candidates.length === 0) throw fail('더 이상 넘길 수 있는 사람이 없어요. 맞혀야 해요!');
+        if (!g.turn.seenBy.includes(p.id)) {
+          g.turn.seenBy.push(p.id);
+        }
 
-        g.turn.seenBy.push(p.id);
+        // 나를 제외하고 아직 카드를 보지 않은 다른 참가자가 남아있는지 확인
+        const candidates = g.participants.filter((id) => !g.turn.seenBy.includes(id) && id !== p.id);
+        if (candidates.length === 0) throw fail('더 이상 넘길 수 있는 다른 사람이 없어요. 맞혀야 해요!');
+
         g.turn.stage = 'pass';
         return;
       }
@@ -229,8 +232,12 @@ module.exports = {
         if (g.turn.stage !== 'pass') return;
         if (p.id !== g.turn.to) throw fail('본인 차례예요');
 
-        if (!g.participants.includes(pl.to)) throw fail('전달할 상대를 선택해주세요');
-        if (g.turn.seenBy.includes(pl.to)) throw fail('이미 이 카드를 본 사람에게는 넘길 수 없어요');
+        if (!g.participants.includes(pl.to) || pl.to === p.id) {
+          throw fail('자신이 아닌 다른 상대를 선택해주세요');
+        }
+        if (g.turn.seenBy.includes(pl.to)) {
+          throw fail('이미 이 카드를 본 사람에게는 넘길 수 없어요');
+        }
         if (!BUG_MAP[pl.claim]) throw fail('선언할 동물을 선택해주세요');
 
         g.turn.from = p.id;
@@ -307,8 +314,10 @@ module.exports = {
         hasSeen,
         // 카드를 본 사람 또는 관전자는 카드가 무엇인지 확인 가능(관전의 묘미: 블러핑 구경)
         actualCard: (hasSeen || isSpectator) ? BUG_MAP[g.turn.card.bugId] : null,
-        // 패스 가능한 후보자 목록
-        passCandidates: g.participants.filter((id) => !g.turn.seenBy.includes(id)).map((id) => ({ id, name: nm(id) })),
+        // 패스 가능한 후보자 목록 (이미 본 사람, 현재 들고 있는 본인은 제외)
+        passCandidates: g.participants
+          .filter((id) => !g.turn.seenBy.includes(id) && id !== g.turn.to && id !== p.id)
+          .map((id) => ({ id, name: nm(id) })),
       };
     }
 

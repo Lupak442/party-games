@@ -216,7 +216,8 @@ GameUI.cockroach = {
 
     // 내가 카드를 받았고 응답할 차례 (참/거짓 맞히기 or 엿보고 넘기기)
     if (isReceiver && turn.stage === 'respond') {
-      const canPass = turn.passCandidates && turn.passCandidates.length > 0;
+      const validCandidates = (turn.passCandidates || []).filter((c) => c.id !== myId && c.id !== turn.to.id);
+      const canPass = validCandidates.length > 0;
       return `
         <div class="glass cr-action-box receiver-glow">
           <div class="cr-turn-header">
@@ -249,7 +250,7 @@ GameUI.cockroach = {
                 👀 몰래 확인하고 다른 사람에게 넘기기 (패스)
               </button>
               <small class="muted" style="display:block; margin-top:4px;">
-                넘길 수 있는 후보: ${turn.passCandidates.map((c) => esc(c.name)).join(', ')}
+                넘길 수 있는 후보: ${validCandidates.map((c) => esc(c.name)).join(', ')}
               </small>
             </div>
           ` : `
@@ -263,15 +264,17 @@ GameUI.cockroach = {
 
     // 내가 카드를 확인하고 다른 사람에게 패스(토스)하는 단계
     if (isReceiver && turn.stage === 'pass') {
-      const passCandidates = turn.passCandidates || [];
-      if (!this.sel.passTo && passCandidates[0]) this.sel.passTo = passCandidates[0].id;
+      const passCandidates = (turn.passCandidates || []).filter((cand) => cand.id !== myId && cand.id !== turn.to.id);
+      if (!this.sel.passTo || this.sel.passTo === myId || !passCandidates.some((c) => c.id === this.sel.passTo)) {
+        this.sel.passTo = passCandidates[0] ? passCandidates[0].id : null;
+      }
       if (!this.sel.passClaim) this.sel.passClaim = turn.claim.id;
 
       return `
         <div class="glass cr-action-box pass-glow">
           <div class="cr-turn-header">
             <span class="badge warn">👀 카드 엿보기 완료</span>
-            <small>다른 사람에게 새로운 주장으로 넘기세요</small>
+            <small>다른 사람에게 새로운 주장으로 넘기세요 (나 제외)</small>
           </div>
 
           <div class="cr-secret-reveal">
@@ -284,9 +287,11 @@ GameUI.cockroach = {
 
           <!-- 1. 넘길 상대 선택 -->
           <div class="form-group" style="margin-top:12px;">
-            <label class="field-title">1. 카드를 넘길 상대 선택</label>
+            <label class="field-title">1. 카드를 넘길 상대 선택 (나 제외)</label>
             <div class="cr-tiles-grid cr-opp-tiles">
-              ${passCandidates.map((cand) => {
+              ${passCandidates.length === 0 ? `
+                <div class="muted center" style="padding:10px;">넘길 수 있는 상대가 없습니다.</div>
+              ` : passCandidates.map((cand) => {
                 const isSel = this.sel.passTo === cand.id;
                 return `
                   <button type="button" class="cr-interactive-tile ${isSel ? 'selected' : ''}" onclick="GameUI.cockroach.setSel('passTo', '${cand.id}')">
