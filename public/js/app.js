@@ -232,22 +232,21 @@ function rankTab() {
     if (isPlayerBabo) cls += ' is-babo';
     const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[rk];
     return `<div class="rrow ${cls} ${p.id === st.me ? 'me' : ''}" data-key="${p.id}" style="transform:translateY(${idx * ROW}px)">
-      <div class="rpos">${isPlayerBabo ? '🤪' : (cls.startsWith('r') && !ri.allSame ? medal : rk)}</div>
+      <div class="rpos">${cls.startsWith('r') && !ri.allSame ? medal : rk}</div>
       ${avatar(p.name, p.id)}
       <div class="rname">
         ${esc(p.name)}
         ${p.id === st.room.hostId ? ' <span title="방장">👑</span>' : ''}
-        ${isPlayerBabo ? ' <span class="r-babo-badge" title="직전 바퀴벌레 포커 꼴찌 바보">🪳🤪 바보</span>' : ''}
+        ${isPlayerBabo ? ' <span class="r-babo-tag" title="바퀴벌레 바보">🪳🤪</span>' : ''}
         ${p.online ? '' : ' <small class="off">오프라인</small>'}
       </div>
       <div class="rscore">${p.score}</div>
       ${isHost ? `<div class="radj"><button data-send="room.score" ${pl({ id: p.id, delta: -1 })}>−</button><button data-send="room.score" ${pl({ id: p.id, delta: 1 })}>+</button></div>` : ''}
       <span class="fx fx1"></span><span class="fx fx2"></span><span class="fx fx3"></span>
-      ${isPlayerBabo ? '<span class="babo-fx">🌀🪳</span>' : (cls.includes('low') ? '<span class="rain">🌧️</span>' : '')}
+      ${cls.includes('low') ? '<span class="rain">🌧️</span>' : ''}
     </div>`;
   }).join('');
   return `<div class="stack"><h2 class="sec">🏆 실시간 랭킹</h2>
-    ${babo ? `<div class="babo-banner">🪳🤪 <b>현재 공식 바보:</b> <span class="babo-name">${esc(babo.name)}</span> <small>(${esc(babo.reason || '바퀴벌레 포커 꼴찌')})</small></div>` : ''}
     <div class="board" style="height:${n * ROW}px">${rows}</div>
     ${isHost ? '<p class="hint">방장은 − / + 버튼으로 점수를 바로 조절할 수 있어요</p>' : ''}
   </div>`;

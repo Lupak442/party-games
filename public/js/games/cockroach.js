@@ -64,12 +64,11 @@ GameUI.cockroach = {
         <div class="cr-player-limit-badge">👥 2~6인 플레이 (현재 ${playerCount}명 대기 중 ${playerCount > 6 ? '· 6명 초과 시 관전' : ''})</div>
       </div>
 
-      <!-- 이전 바보 안내 배너 -->
+      <!-- 이전 바보 안내 -->
       ${babo ? `
         <div class="glass cr-babo-hall center">
-          <div class="babo-hall-title">👑 명예의 바보 殿堂 🪳🤪</div>
-          <div class="babo-hall-desc">현재 방의 공식 바보: <b class="text-danger">${esc(babo.name)}</b></div>
-          <small class="muted">${esc(babo.reason || '직전 바퀴벌레 포커 꼴찌')}</small>
+          <div class="babo-hall-title">🪳🤪 직전 바보: <b>${esc(babo.name)}</b></div>
+          <small class="muted">${esc(babo.reason || '바퀴벌레 포커 꼴찌')}</small>
         </div>
       ` : ''}
 

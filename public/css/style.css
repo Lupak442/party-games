@@ -408,23 +408,36 @@ button.chip:hover { background: rgba(255,255,255,.2); }
 .spec-info small { color: var(--muted); }
 .spectator-glow { border-color: rgba(168,85,247,.6); box-shadow: 0 0 25px rgba(168,85,247,.25); background: linear-gradient(145deg, rgba(30,27,75,.8), rgba(88,28,135,.4)); }
 .cr-player-limit-badge { display: inline-block; margin-top: 6px; font-size: .8rem; font-weight: 700; background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 12px; color: var(--gold); }
-.cr-babo-hall { margin: 10px 0; padding: 12px; border-radius: 14px; background: rgba(236,72,153,.15); border: 1.5px dashed rgba(236,72,153,.5); }
-.babo-hall-title { font-size: .9rem; font-weight: 900; color: #f472b6; }
-.babo-hall-desc { font-size: 1rem; margin: 4px 0; }
+.cr-babo-hall { margin: 8px 0; padding: 10px 14px; border-radius: 12px; background: rgba(146,64,14,.18); border: 1px dashed rgba(217,119,6,.45); }
+.babo-hall-title { font-size: .85rem; font-weight: 800; color: #fbbf24; }
+.babo-hall-desc { font-size: .95rem; margin: 2px 0; }
 
-/* 바보 랭킹 & 프로필 스타일링 */
-@keyframes baboWobble {
-  0%, 100% { transform: translateY(var(--row-y, 0)) rotate(0deg); }
-  25% { transform: translateY(var(--row-y, 0)) rotate(-1.5deg); }
-  75% { transform: translateY(var(--row-y, 0)) rotate(1.5deg); }
+/* 바보 랭킹 & 프로필 스타일링 (따뜻하고 은은한 갈색빛 톤) */
+.rrow.is-babo { 
+  background: linear-gradient(135deg, rgba(146, 64, 14, 0.22), rgba(69, 26, 3, 0.28)) !important; 
+  border: 1px solid rgba(217, 119, 6, 0.4) !important; 
+  border-left: 4px solid #b45309 !important; 
+  box-shadow: 0 4px 16px rgba(120, 53, 15, 0.2) !important; 
 }
-.rrow.is-babo { border: 2px dashed #ec4899 !important; background: linear-gradient(135deg, rgba(236,72,153,.15), rgba(88,28,135,.2)) !important; animation: baboWobble 3s ease-in-out infinite; }
-.rrow.is-babo .avatar { outline: 2px dashed #ec4899; }
-.r-babo-badge, .me-babo-tag, .p-babo-tag { display: inline-block; background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; padding: 2px 7px; border-radius: 8px; font-weight: 900; font-size: .75rem; border: 1px solid rgba(255,255,255,.4); box-shadow: 0 2px 8px rgba(236,72,153,.4); vertical-align: middle; }
-.babo-fx { position: absolute; right: 12px; font-size: 1.2rem; opacity: .8; }
-.babo-banner { margin-bottom: 12px; padding: 10px 14px; border-radius: 12px; background: rgba(236,72,153,.15); border: 1px dashed rgba(236,72,153,.4); font-size: .88rem; animation: popIn .3s ease-out; }
-.babo-banner .babo-name { color: #f472b6; font-weight: 900; font-size: .95rem; }
-.prow.is-babo-row { border: 1.5px dashed rgba(236,72,153,.4); background: rgba(236,72,153,.06); }
+.rrow.is-babo .avatar { outline: 2px solid #b45309; }
+.r-babo-tag, .me-babo-tag, .p-babo-tag { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 2px; 
+  background: linear-gradient(135deg, #b45309, #78350f); 
+  color: #fef3c7; 
+  padding: 2px 6px; 
+  border-radius: 8px; 
+  font-weight: 800; 
+  font-size: .75rem; 
+  border: 1px solid rgba(251, 191, 36, 0.4); 
+  box-shadow: 0 2px 6px rgba(120, 53, 15, 0.35); 
+  vertical-align: middle; 
+}
+.prow.is-babo-row { 
+  border-left: 3px solid #b45309; 
+  background: rgba(146, 64, 14, 0.08); 
+}
 
 /* 플레이어 수집 보드 */
 .cr-tables-board { padding: 14px; }
