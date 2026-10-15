@@ -73,6 +73,7 @@ function viewFor(room, p) {
       maxPlayers: room.maxPlayers,
       hostId: room.hostId,
       gameId: room.game ? room.game.id : null,
+      babo: room.babo || null,
       players: room.players.map((x) => ({ id: x.id, name: x.name, score: x.score, joinedAt: x.joinedAt, online: isOnline(room, x.id) })),
     },
     meta: {

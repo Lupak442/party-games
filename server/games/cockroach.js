@@ -51,8 +51,9 @@ module.exports = {
   id: 'cockroach',
   name: '바퀴벌레 포커',
   icon: '🪳',
-  desc: '블러핑 심리전! 꼴찌 1명을 가려내는 벌레 모으기',
+  desc: '블러핑 심리전! 꼴찌 1명을 가려내는 벌레 모으기 (2~6인, 초과 시 관전)',
   minPlayers: 2,
+  maxPlayers: 6,
 
   init() {
     return {
@@ -65,6 +66,8 @@ module.exports = {
       tables: {},      // pid -> { bugId: count, ... }
       turn: null,      // active card passing state
       activePlayer: null, // 카드를 보낼 차례인 사람
+      participants: [],
+      spectators: [],
       loserId: null,
       loserReason: null,
     };
@@ -89,7 +92,16 @@ module.exports = {
         if (g.phase !== 'setup' && g.phase !== 'end') return;
         if (room.players.length < 2) throw fail('최소 2명 이상 필요해요');
 
-        g.participants = room.players.map((x) => x.id);
+        // 2~6인 제한: 6명 초과 시 앞의 6명 참가, 나머지는 관전자!
+        const allPids = room.players.map((x) => x.id);
+        if (allPids.length > 6) {
+          g.participants = allPids.slice(0, 6);
+          g.spectators = allPids.slice(6);
+        } else {
+          g.participants = [...allPids];
+          g.spectators = [];
+        }
+
         const deck = makeDeck();
 
         g.hands = {};
@@ -100,7 +112,7 @@ module.exports = {
           BUGS.forEach((b) => { g.tables[id][b.id] = 0; });
         });
 
-        // 카드 균등 분배
+        // 카드 균등 분배 (참가자에게만)
         let idx = 0;
         while (deck.length > 0) {
           const card = deck.pop();
@@ -244,17 +256,21 @@ module.exports = {
     const g = room.game.state;
     const nm = (id) => nameOf(room, id);
     const isHost = p.id === room.hostId;
+    const isSpectator = g.phase !== 'setup' && !g.participants.includes(p.id);
 
     const v = {
       phase: g.phase,
       settings: g.settings,
       bugs: BUGS,
+      babo: room.babo || null,
+      isSpectator,
+      spectators: (g.spectators || []).map((id) => ({ id, name: nm(id) })),
     };
 
     if (g.phase === 'setup') return v;
 
     v.activePlayer = g.activePlayer ? { id: g.activePlayer, name: nm(g.activePlayer) } : null;
-    v.myHand = (g.hands[p.id] || []).map((c) => ({ id: c.id, bug: BUG_MAP[c.bugId] }));
+    v.myHand = isSpectator ? [] : (g.hands[p.id] || []).map((c) => ({ id: c.id, bug: BUG_MAP[c.bugId] }));
     v.myHandCount = v.myHand.length;
 
     // 모든 참가자들의 테이블(앞에 모인 벌레 컬렉션) 현황
@@ -289,8 +305,8 @@ module.exports = {
         isReceiver,
         isSender,
         hasSeen,
-        // 카드를 본 사람은 실제 카드가 무엇인지 볼 수 있음
-        actualCard: hasSeen ? BUG_MAP[g.turn.card.bugId] : null,
+        // 카드를 본 사람 또는 관전자는 카드가 무엇인지 확인 가능(관전의 묘미: 블러핑 구경)
+        actualCard: (hasSeen || isSpectator) ? BUG_MAP[g.turn.card.bugId] : null,
         // 패스 가능한 후보자 목록
         passCandidates: g.participants.filter((id) => !g.turn.seenBy.includes(id)).map((id) => ({ id, name: nm(id) })),
       };
@@ -323,10 +339,21 @@ function endGame(room, g, ctx, loserId, reason, bugName) {
   }
   g.loserReason = reasonDesc;
 
+  // 꼴찌 바보 타이틀 방에 등록 (다음 바퀴벌레 포커에서 새 꼴찌가 나오기 전까지 유지)
+  const loserName = nameOf(room, loserId);
+  room.babo = {
+    playerId: loserId,
+    name: loserName,
+    title: '바퀴벌레 바보',
+    icon: '🪳🤪',
+    reason: reasonDesc,
+    at: Date.now(),
+  };
+
   // 패배자 감점
   ctx.addScore(room, loserId, -g.settings.losePts, `바퀴벌레 포커 꼴찌 (${reasonDesc})`);
 
-  // 승자들 가점
+  // 승자들 가점 (참가자 중 패배자 제외)
   g.participants.filter((id) => id !== loserId).forEach((id) => {
     ctx.addScore(room, id, g.settings.winPts, '바퀴벌레 포커 생존 승리');
   });

@@ -173,7 +173,8 @@ function renderRoom() {
   show('#landing', false); show('#room', true);
   $('#roomCode').textContent = st.room.code;
   const m = me(), ri = rankInfo(), isHost = st.me === st.room.hostId;
-  $('#meChip').innerHTML = `${isHost ? '👑 ' : ''}${esc(m.name)} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
+  const isBabo = st.room.babo && st.room.babo.playerId === m.id;
+  $('#meChip').innerHTML = `${isHost ? '👑 ' : ''}${esc(m.name)}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
   ['game', 'rank', 'people'].forEach((t) => $('#tab-' + t).classList.toggle('on', S.tab === t));
   const html = S.tab === 'game' ? gameTab() : S.tab === 'rank' ? rankTab() : peopleTab();
   morph($('#roomBody'), html);
@@ -219,6 +220,7 @@ function gameTab() {
 
 function rankTab() {
   const st = S.state, isHost = st.me === st.room.hostId, ri = rankInfo(), n = ri.sorted.length;
+  const babo = st.room.babo;
   const rows = [...st.room.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => {
     const idx = ri.order.get(p.id), rk = ri.rank.get(p.id);
     let cls = '';
@@ -226,29 +228,39 @@ function rankTab() {
       if (rk <= 3) cls = 'r' + rk;
       else if (idx >= n - 2) cls = 'low';
     }
+    const isPlayerBabo = babo && babo.playerId === p.id;
+    if (isPlayerBabo) cls += ' is-babo';
     const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[rk];
     return `<div class="rrow ${cls} ${p.id === st.me ? 'me' : ''}" data-key="${p.id}" style="transform:translateY(${idx * ROW}px)">
-      <div class="rpos">${cls.startsWith('r') && !ri.allSame ? medal : rk}</div>
+      <div class="rpos">${isPlayerBabo ? '🤪' : (cls.startsWith('r') && !ri.allSame ? medal : rk)}</div>
       ${avatar(p.name, p.id)}
-      <div class="rname">${esc(p.name)}${p.id === st.room.hostId ? ' <span title="방장">👑</span>' : ''}${p.online ? '' : ' <small class="off">오프라인</small>'}</div>
+      <div class="rname">
+        ${esc(p.name)}
+        ${p.id === st.room.hostId ? ' <span title="방장">👑</span>' : ''}
+        ${isPlayerBabo ? ' <span class="r-babo-badge" title="직전 바퀴벌레 포커 꼴찌 바보">🪳🤪 바보</span>' : ''}
+        ${p.online ? '' : ' <small class="off">오프라인</small>'}
+      </div>
       <div class="rscore">${p.score}</div>
       ${isHost ? `<div class="radj"><button data-send="room.score" ${pl({ id: p.id, delta: -1 })}>−</button><button data-send="room.score" ${pl({ id: p.id, delta: 1 })}>+</button></div>` : ''}
       <span class="fx fx1"></span><span class="fx fx2"></span><span class="fx fx3"></span>
-      ${cls === 'low' ? '<span class="rain">🌧️</span>' : ''}
+      ${isPlayerBabo ? '<span class="babo-fx">🌀🪳</span>' : (cls.includes('low') ? '<span class="rain">🌧️</span>' : '')}
     </div>`;
   }).join('');
   return `<div class="stack"><h2 class="sec">🏆 실시간 랭킹</h2>
+    ${babo ? `<div class="babo-banner">🪳🤪 <b>현재 공식 바보:</b> <span class="babo-name">${esc(babo.name)}</span> <small>(${esc(babo.reason || '바퀴벌레 포커 꼴찌')})</small></div>` : ''}
     <div class="board" style="height:${n * ROW}px">${rows}</div>
     ${isHost ? '<p class="hint">방장은 − / + 버튼으로 점수를 바로 조절할 수 있어요</p>' : ''}
   </div>`;
 }
 
 function peopleTab() {
-  const st = S.state, isHost = st.me === st.room.hostId, r = st.room;
-  const list = [...r.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => `
-    <div class="prow">
+  const st = S.state, isHost = st.me === st.room.hostId, r = st.room, babo = r.babo;
+  const list = [...r.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => {
+    const isPlayerBabo = babo && babo.playerId === p.id;
+    return `
+    <div class="prow ${isPlayerBabo ? 'is-babo-row' : ''}">
       ${avatar(p.name, p.id)}
-      <div class="pinfo"><b>${esc(p.name)}${p.id === r.hostId ? ' 👑' : ''}${p.id === st.me ? ' <small>(나)</small>' : ''}</b>
+      <div class="pinfo"><b>${esc(p.name)}${p.id === r.hostId ? ' 👑' : ''}${isPlayerBabo ? ' <span class="p-babo-tag">🪳🤪 바보</span>' : ''}${p.id === st.me ? ' <small>(나)</small>' : ''}</b>
         <small class="${p.online ? 'on' : 'off'}">● ${p.online ? '접속 중' : '오프라인 (자리 유지 중)'} · ${p.score}점</small></div>
       ${isHost && p.id !== st.me ? `<div class="pact">
         <button class="mini" data-send="room.score" ${pl({ id: p.id, delta: -5 })}>-5</button>
@@ -256,7 +268,8 @@ function peopleTab() {
         <button class="mini" data-send="room.transferHost" ${pl({ id: p.id })} data-confirm="${esc(p.name)}님에게 방장을 넘길까요?">👑</button>
         <button class="mini danger" data-send="room.kick" ${pl({ id: p.id })} data-confirm="${esc(p.name)}님을 내보낼까요?">✕</button>
       </div>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="stack">
     <div class="glass invite">
       <div><small>초대코드</small><div class="big-code">${r.code}</div></div>
