@@ -772,6 +772,292 @@ button.chip:hover { background: rgba(255,255,255,.2); }
   .c-icon { font-size: 1.2rem; }
 }
 
+/* ========================================================
+   카멜레온 (The Chameleon) 스타일링
+   ======================================================== */
+.cm-container { width: 100%; max-width: 760px; margin: 0 auto; gap: 14px; }
+.cm-intro { padding: 24px 16px; text-align: center; }
+.cm-chameleon-icon { font-size: 3.5rem; filter: drop-shadow(0 0 16px rgba(16,185,129,.6)); animation: float 3s ease-in-out infinite; }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+
+.cm-limit-badge { display: inline-block; margin-top: 8px; font-size: .85rem; font-weight: 700; color: #34d399; background: rgba(52,211,153,.15); padding: 4px 12px; border-radius: 999px; }
+.cm-rules-box { padding: 16px; }
+.cm-rules-list { margin: 0; padding-left: 20px; font-size: .9rem; line-height: 1.6; }
+.cm-rules-list li { margin-bottom: 6px; }
+
+/* 역할 카드 */
+.cm-role-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+.cm-role-card.role-chameleon {
+  border-color: #a855f7;
+  background: linear-gradient(135deg, rgba(168,85,247,.22), rgba(16,185,129,.12));
+  box-shadow: 0 0 24px rgba(168,85,247,.25);
+}
+.cm-role-card.role-civilian {
+  border-color: #38bdf8;
+  background: linear-gradient(135deg, rgba(56,189,248,.2), rgba(14,165,233,.08));
+}
+.role-icon { font-size: 3rem; line-height: 1; }
+.role-badge { font-size: .8rem; font-weight: 800; display: inline-block; padding: 2px 8px; border-radius: 999px; margin-bottom: 4px; }
+.role-chameleon .role-badge { background: #a855f7; color: #fff; }
+.role-civilian .role-badge { background: #38bdf8; color: #000; }
+.role-desc h2 { margin: 2px 0 6px 0; font-size: 1.4rem; }
+.role-hint { margin: 0; font-size: .95rem; }
+.secret-highlight { font-size: 1.25rem; color: #fbbf24; text-decoration: underline; text-underline-offset: 4px; }
+
+/* 4x4 단어 그리드 판 */
+.cm-grid-container {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(18,20,32,.85);
+  border: 1.5px solid rgba(255,255,255,.12);
+}
+.cm-grid-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 6px; }
+.cm-topic-name { font-size: 1.15rem; font-weight: 800; color: #38bdf8; }
+
+.cm-grid-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.cm-word-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 6px;
+  min-height: 64px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.1);
+  text-align: center;
+  transition: all .2s;
+}
+.word-coord {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: .65rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.word-text {
+  font-size: .95rem;
+  font-weight: 800;
+  color: #fff;
+  word-break: keep-all;
+  line-height: 1.2;
+}
+
+/* 비밀 단어 하이라이트 */
+.cm-word-tile.secret-word {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(217,119,6,.15));
+  box-shadow: 0 0 16px rgba(251,191,36,.4);
+  animation: pulse 1.5s infinite;
+}
+.cm-word-tile.secret-word .word-text { color: #fef08a; font-size: 1.05rem; }
+.cm-word-tile.secret-word .word-coord { color: #fbbf24; }
+.secret-pin {
+  position: absolute;
+  bottom: 2px;
+  font-size: .6rem;
+  font-weight: 900;
+  color: #fbbf24;
+}
+
+/* 힌트 차례 & 입력창 */
+.cm-turn-banner { padding: 14px; border-radius: 14px; }
+.cm-turn-banner.my-turn-glow { border-color: #38bdf8; box-shadow: 0 0 20px rgba(56,189,248,.35); }
+.cm-clue-input-box { padding: 12px; border-radius: 12px; }
+.cm-input-row { display: flex; gap: 8px; }
+.cm-input-row input { flex: 1; font-size: 1.05rem; padding: 10px 14px; border-radius: 10px; }
+
+/* 힌트 타임라인 리스트 */
+.cm-clues-timeline { padding: 14px; border-radius: 14px; }
+.cm-clues-list { display: flex; flex-direction: column; gap: 8px; }
+.cm-clue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.cm-clue-item.current-speaker {
+  border-color: #38bdf8;
+  background: rgba(56,189,248,.1);
+}
+.clue-user { font-weight: 700; font-size: .9rem; }
+.clue-bubble { font-size: 1rem; color: #34d399; }
+.cm-clue-item.has-clue .clue-bubble { font-size: 1.05rem; color: #fef08a; }
+
+/* 토론 요약 바 */
+.cm-clues-summary { padding: 12px 14px; border-radius: 12px; }
+.summary-title { font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.summary-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.clue-chip {
+  font-size: .85rem;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+.chip-name { color: var(--muted); }
+
+/* 투표 패널 */
+.cm-vote-panel { padding: 16px; border-radius: 16px; }
+.cm-vote-candidates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+.cm-candidate-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.12);
+  cursor: pointer;
+  transition: all .2s;
+  min-height: 80px;
+  text-align: center;
+}
+.cm-candidate-card:hover:not([disabled]) {
+  transform: translateY(-3px);
+  border-color: rgba(244,63,94,.5);
+  background: rgba(244,63,94,.08);
+}
+.cm-candidate-card.selected {
+  border-color: #f43f5e;
+  background: rgba(244,63,94,.2);
+  box-shadow: 0 0 16px rgba(244,63,94,.4);
+  transform: translateY(-4px);
+}
+.cm-candidate-card.voted {
+  border-color: #34d399;
+}
+.cand-name { font-size: .95rem; font-weight: 800; }
+.cand-clue { font-size: .8rem; color: #fef08a; margin-top: 4px; }
+.cand-badge { position: absolute; top: -8px; font-size: .65rem; }
+
+/* 카멜레온의 최후 추리 (guess) */
+.cm-guess-banner { padding: 18px 14px; }
+.cm-chameleon-guess-box {
+  padding: 18px;
+  border-radius: 16px;
+  border: 2px solid #fbbf24;
+  background: linear-gradient(135deg, rgba(251,191,36,.12), rgba(20,20,35,.9));
+}
+.cm-guess-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.cm-guess-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.15);
+  cursor: pointer;
+  text-align: center;
+  transition: all .18s;
+}
+.cm-guess-tile:hover {
+  transform: translateY(-2px);
+  border-color: #fbbf24;
+  background: rgba(251,191,36,.15);
+}
+.cm-guess-tile.selected {
+  border-color: #fbbf24;
+  background: #fbbf24;
+  color: #000;
+  box-shadow: 0 0 16px rgba(251,191,36,.6);
+  transform: translateY(-4px);
+}
+.cm-guess-tile.selected .guess-word { color: #000; font-weight: 900; }
+.guess-word { font-size: .9rem; font-weight: 700; }
+.guess-check { position: absolute; bottom: 2px; font-size: .6rem; font-weight: 900; }
+
+/* 라운드 종료 및 진실 공개 */
+.cm-end-banner { padding: 22px 16px; }
+.cm-end-banner.win-chameleon { border-color: #a855f7; box-shadow: 0 0 24px rgba(168,85,247,.25); }
+.cm-end-banner.win-civilians { border-color: #34d399; box-shadow: 0 0 24px rgba(52,211,153,.25); }
+.cm-end-desc { font-size: 1rem; margin: 8px 0 14px 0; line-height: 1.5; }
+
+.cm-truth-box {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.3);
+}
+.truth-item { display: flex; flex-direction: column; align-items: center; }
+.truth-label { font-size: .75rem; color: var(--muted); }
+.truth-val { font-size: 1.2rem; font-weight: 900; margin-top: 2px; }
+.truth-val.secret { color: #fbbf24; }
+.truth-val.chameleon { color: #a855f7; }
+
+/* 랭킹 리더보드 */
+.cm-leaderboard-box { padding: 16px; border-radius: 16px; }
+.cm-leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
+.cm-lead-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.cm-lead-row.was-chameleon { border-color: rgba(168,85,247,.4); background: rgba(168,85,247,.08); }
+.lead-rank { font-weight: 900; font-size: 1rem; width: 40px; }
+.lead-name { flex: 1; font-size: .95rem; }
+.lead-pts { display: flex; align-items: center; gap: 10px; }
+.round-plus { color: #34d399; font-weight: 800; font-size: .9rem; }
+.total-pts { font-weight: 900; font-size: 1.05rem; }
+
+.cm-winner-podium {
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(217,119,6,.15));
+  border: 2px solid #fbbf24;
+  margin: 16px 0;
+}
+.cm-winner-podium .winner-name { font-size: 2.2rem; font-weight: 900; color: #fff; margin: 4px 0; }
+.cm-winner-podium .winner-score { font-size: 1.3rem; font-weight: 800; color: #fbbf24; }
+
+@media (max-width: 440px) {
+  .cm-grid-board, .cm-guess-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .cm-word-tile { min-height: 52px; padding: 10px 2px; }
+  .word-text { font-size: .8rem; }
+  .cm-vote-candidates { grid-template-columns: 1fr 1fr; }
+}
+
 @media (max-width: 380px) { .game-grid { grid-template-columns: 1fr; } .trio { grid-template-columns: 1fr 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+
 
