@@ -200,10 +200,13 @@ module.exports = {
       clues: {},            // pid -> string
       ready: {},            // pid -> boolean (카드 확인 완료)
       votes: {},            // voterPid -> targetPid
+      voteRound: 1,         // 1: 1차 투표, 2: 재투표 (동점자 결선 투표)
+      voteCandidates: [],   // 투표 지목 대상 후보군
+      revoteNotice: null,   // 재투표 안내 정보
       voteResult: null,     // { tally: {}, top: [], isChameleonCaught: bool, caughtList: [] }
       guessResult: null,    // { guesserId, word, isCorrect }
       roundWinner: null,    // 'chameleon' | 'civilians'
-      roundReason: null,    // 'escaped' | 'caught_wrong_guess' | 'caught_correct_guess'
+      roundReason: null,    // 'escaped' | 'tie' | 'caught_wrong_guess' | 'caught_correct_guess'
       roundScores: {},      // pid -> score this round
     };
   },
@@ -306,7 +309,7 @@ module.exports = {
         if (g.phase !== 'debate') return;
 
         const targetId = String(pl.targetId || '');
-        if (!g.participants.includes(targetId)) throw fail('유효하지 않은 지목 대상이에요');
+        if (!g.voteCandidates.includes(targetId)) throw fail('이번 투표의 지목 대상 후보가 아니에요');
 
         g.votes[p.id] = targetId;
 
@@ -421,6 +424,9 @@ module.exports = {
     // 투표 정보
     v.myVote = g.votes[p.id] || null;
     v.voteCount = Object.keys(g.votes).length;
+    v.voteRound = g.voteRound || 1;
+    v.voteCandidates = g.voteCandidates || [...g.participants];
+    v.revoteNotice = g.revoteNotice;
 
     // 결과 정보
     v.voteResult = g.voteResult;
@@ -453,6 +459,9 @@ function startNewRound(room, g) {
   g.ready = {};
   g.clues = {};
   g.votes = {};
+  g.voteRound = 1;
+  g.voteCandidates = [...g.participants];
+  g.revoteNotice = null;
   g.voteResult = null;
   g.guessResult = null;
   g.roundWinner = null;
@@ -491,7 +500,7 @@ function startNewRound(room, g) {
 function tallyVotes(room, g, ctx) {
   const nm = (id) => nameOf(room, id);
   const tally = {};
-  g.participants.forEach((id) => { tally[id] = 0; });
+  (g.voteCandidates || g.participants).forEach((id) => { tally[id] = 0; });
   Object.values(g.votes).forEach((targetId) => {
     if (tally[targetId] !== undefined) {
       tally[targetId]++;
@@ -499,11 +508,42 @@ function tallyVotes(room, g, ctx) {
   });
 
   const maxVotes = Math.max(0, ...Object.values(tally));
-  const topIds = maxVotes > 0 ? Object.keys(tally).filter((id) => tally[id] === maxVotes) : [];
+  const topIds = maxVotes > 0 ? (g.voteCandidates || g.participants).filter((id) => tally[id] === maxVotes) : [];
 
-  // 최다 득표자 중 실제 카멜레온이 있는지 판정
-  const caughtList = topIds.filter((id) => g.chameleonIds.includes(id));
-  const isChameleonCaught = caughtList.length > 0;
+  // 최다 득표수가 같은 사람이 2명 이상인 경우 (동점표)
+  if (topIds.length >= 2 || maxVotes === 0) {
+    if (g.voteRound === 1) {
+      // 1차 투표에서 동점 발생 -> 동점자들만 대상으로 2차 재투표 진행!
+      const tieCandidates = topIds.length >= 2 ? topIds : [...g.participants];
+      g.voteRound = 2;
+      g.voteCandidates = [...tieCandidates];
+      g.votes = {}; // 투표 리셋
+      g.revoteNotice = {
+        round: 2,
+        topIds: tieCandidates,
+        topNames: tieCandidates.map(nm),
+        maxVotes,
+      };
+      g.phase = 'debate';
+      return;
+    } else {
+      // 2차 재투표에서도 또다시 동점표 발생 -> 카멜레온 승리!
+      g.voteResult = {
+        tally,
+        topIds,
+        topNames: topIds.map(nm),
+        maxVotes,
+        isChameleonCaught: false,
+        caughtList: [],
+      };
+      finishRound(room, g, ctx, 'chameleon', 'tie');
+      return;
+    }
+  }
+
+  // 단독 1등 선출 완료 (1차 또는 2차 재투표)
+  const singleTopId = topIds[0];
+  const isChameleonCaught = g.chameleonIds.includes(singleTopId);
 
   g.voteResult = {
     tally,
@@ -511,14 +551,14 @@ function tallyVotes(room, g, ctx) {
     topNames: topIds.map(nm),
     maxVotes,
     isChameleonCaught,
-    caughtList,
+    caughtList: isChameleonCaught ? [singleTopId] : [],
   };
 
   if (isChameleonCaught) {
     // 카멜레온 검거 성공! -> 카멜레온에게 비밀 단어 추리 기회 제공!
     g.phase = 'guess';
   } else {
-    // 카멜레온 검거 실패 (카멜레온 도주 성공!) -> 카멜레온 승리!
+    // 시민 오인 지목 (카멜레온 도주 성공!) -> 카멜레온 승리!
     finishRound(room, g, ctx, 'chameleon', 'escaped');
   }
 }
@@ -529,13 +569,15 @@ function finishRound(room, g, ctx, winner, reason) {
   g.roundReason = reason;
   g.roundScores = {};
 
-  const chamPts = reason === 'escaped' ? 3 : 2; // 검거 실패 시 3점, 추리 성공 시 2점
-  const civPts = 2;                             // 검거 성공 및 추리 실패 시 시민 각 2점
+  // 검거 실패(escaped) 또는 재투표 동점(tie) 시 카멜레온 3점, 역전 추리 성공 시 2점, 시민 승리 시 시민 각 2점
+  const chamPts = (reason === 'escaped' || reason === 'tie') ? 3 : 2;
+  const civPts = 2;
 
   if (winner === 'chameleon') {
+    const reasonText = reason === 'tie' ? '재투표 동점 도주' : reason === 'escaped' ? '위장 성공' : '비밀 단어 역전 추리';
     g.chameleonIds.forEach((id) => {
       g.roundScores[id] = chamPts;
-      ctx.addScore(room, id, chamPts, `카멜레온 승리 (${reason === 'escaped' ? '위장 성공' : '비밀 단어 역전 추리'})`);
+      ctx.addScore(room, id, chamPts, `카멜레온 승리 (${reasonText})`);
     });
     g.participants.filter((id) => !g.chameleonIds.includes(id)).forEach((id) => {
       g.roundScores[id] = 0;

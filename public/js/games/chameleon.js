@@ -236,6 +236,8 @@ GameUI.chameleon = {
     const myId = typeof me === 'object' && me ? me.id : me;
     const isSpectator = G.isSpectator;
     const myVote = G.myVote;
+    const isRevote = G.voteRound === 2;
+    const candidateIds = G.voteCandidates || G.participants.map((p) => p.id);
 
     return `
       <!-- 단어 그리드 & 힌트 타임라인 요약 -->
@@ -253,36 +255,56 @@ GameUI.chameleon = {
         </div>
       </div>
 
+      <!-- 재투표 알림 배너 (동점표 발생 시) -->
+      ${isRevote && G.revoteNotice ? `
+        <div class="glass cm-revote-alert">
+          <div class="revote-icon">⚠️</div>
+          <div class="revote-desc">
+            <b class="text-danger">[2차 결선 재투표] 동점표(${G.revoteNotice.maxVotes}표)가 발생했습니다!</b>
+            <p style="margin:2px 0 0 0;">최다 득표 동점자인 <b>${esc(G.revoteNotice.topNames.join(', '))}</b> 님만을 대상으로 재투표를 진행합니다.</p>
+            <small class="text-gold">※ 이번 재투표에서도 동점표가 나오면 카멜레온의 승리가 됩니다!</small>
+          </div>
+        </div>
+      ` : ''}
+
       <!-- 투표 조작 패널 -->
       <div class="glass cm-vote-panel">
         <div class="center" style="margin-bottom:12px;">
-          <div class="badge danger">🔥 카멜레온 색출 투표</div>
-          <h2 style="margin:6px 0 2px 0;">누가 카멜레온인가요?</h2>
-          <p class="muted">의심되는 사람 1명을 선택하고 투표하세요! (${G.voteCount}/${G.participants.length}명 투표 완료)</p>
+          <div class="badge ${isRevote ? 'warn' : 'danger'}">
+            ${isRevote ? '⚠️ 2차 결선 재투표' : '🔥 카멜레온 색출 투표'}
+          </div>
+          <h2 style="margin:6px 0 2px 0;">
+            ${isRevote ? '동점자 중 진짜 카멜레온은 누구인가요?' : '누가 카멜레온인가요?'}
+          </h2>
+          <p class="muted">
+            ${isRevote ? '동점 후보 중 1명을 선택하세요!' : '의심되는 사람 1명을 선택하고 투표하세요!'}
+            (${G.voteCount}/${G.participants.length}명 투표 완료)
+          </p>
         </div>
 
         ${!isSpectator ? `
           <div class="cm-vote-candidates">
             ${G.participants.map((p) => {
               const isSelf = p.id === myId;
+              const isCandidate = candidateIds.includes(p.id);
               const isSelected = this.selectedVote === p.id;
               const hasVotedForThis = myVote === p.id;
 
               return `
                 <button type="button" 
-                        class="cm-candidate-card ${isSelected ? 'selected' : ''} ${hasVotedForThis ? 'voted' : ''}" 
-                        onclick="GameUI.chameleon.selectVote('${p.id}')"
-                        ${isSelf ? 'disabled' : ''}>
+                        class="cm-candidate-card ${isSelected ? 'selected' : ''} ${hasVotedForThis ? 'voted' : ''} ${!isCandidate ? 'non-candidate' : ''}" 
+                        onclick="${isCandidate && !isSelf ? `GameUI.chameleon.selectVote('${p.id}')` : ''}"
+                        ${!isCandidate || isSelf ? 'disabled' : ''}>
                   <div class="cand-name">${esc(p.name)} ${isSelf ? '<small>(나)</small>' : ''}</div>
                   <div class="cand-clue">${p.clue ? `"${esc(p.clue)}"` : '힌트 없음'}</div>
-                  ${hasVotedForThis ? '<span class="badge ok cand-badge">내가 투표함</span>' : isSelected ? '<span class="badge accent cand-badge">선택됨</span>' : ''}
+                  ${hasVotedForThis ? '<span class="badge ok cand-badge">내가 투표함</span>' : isSelected ? '<span class="badge accent cand-badge">선택됨</span>' : !isCandidate ? '<span class="badge muted cand-badge">후보 제외</span>' : ''}
                 </button>
               `;
             }).join('')}
           </div>
 
-          <button class="btn danger xl block" onclick="GameUI.chameleon.sendVote()" style="margin-top:14px;" ${this.selectedVote ? '' : 'disabled'}>
-            🗳️ 카멜레온으로 지목 투표하기
+          <button class="btn ${isRevote ? 'warn' : 'danger'} xl block" onclick="GameUI.chameleon.sendVote()" style="margin-top:14px;" ${this.selectedVote && candidateIds.includes(this.selectedVote) ? '' : 'disabled'}>
+            🗳️ ${isRevote ? '결선 재투표 제출하기' : '카멜레온으로 지목 투표하기'}
           </button>
         ` : `
           <div class="muted center">관전 중에는 투표할 수 없습니다.</div>
@@ -371,6 +393,8 @@ GameUI.chameleon = {
         <div class="cm-end-desc">
           ${reason === 'escaped' ? `
             <b class="text-gold">카멜레온 위장 성공!</b> 시민들이 엉뚱한 사람을 지목하여 카멜레온이 무사히 탈출했습니다. (+3점)
+          ` : reason === 'tie' ? `
+            <b class="text-gold">카멜레온 승리!</b> 2차 재투표에서도 동점표가 나와 의견이 갈렸습니다. 카멜레온이 혼란을 틈타 무사히 도주했습니다! (+3점)
           ` : reason === 'caught_correct_guess' ? `
             <b class="text-gold">카멜레온 대역전승!</b> 정체가 들통났지만 비밀 단어를 정확히 맞혔습니다! (+2점)
           ` : `
