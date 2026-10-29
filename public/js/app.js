@@ -163,7 +163,7 @@ const Local = {
     landErr('');
   },
   downloadApp() {
-    alert('구글 플레이스토어 출시 준비 중입니다!\n\n출시 전 테스트를 위해 아래 [앱 모드 활성화 토글] 버튼을 누르시면 지금 바로 방장 앱 기능을 테스트하실 수 있습니다.');
+    location.href = '/download/partygames-host.apk';
   },
   toggleAppMode() {
     const cur = localStorage.getItem('pg_is_app') === '1';
@@ -201,6 +201,10 @@ const Local = {
   async share() {
     const url = `${location.origin}/?room=${S.state.room.code}`;
     const text = `파티 게임 같이 해요! 초대코드: ${S.state.room.code}`;
+    if (window.AndroidBridge && typeof window.AndroidBridge.shareInvite === 'function') {
+      window.AndroidBridge.shareInvite('파티 게임즈', text, url);
+      return;
+    }
     if (navigator.share) { try { await navigator.share({ title: '파티 게임즈', text, url }); return; } catch (e) { /* 취소 */ } }
     try { await navigator.clipboard.writeText(url); toast('초대 링크를 복사했어요 🔗'); } catch (e) { prompt('링크를 복사하세요', url); }
   },
