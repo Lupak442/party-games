@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1080px;
+    height: 1920px;
+    background: radial-gradient(circle at 50% 20%, #fce7f3 0%, #fdf2f8 40%, #f8fafc 100%);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    padding-top: 110px;
+  }
+  .header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 34px;
+    background: #ffffff;
+    border-radius: 999px;
+    font-size: 26px;
+    font-weight: 800;
+    color: #db2777;
+    box-shadow: 0 8px 24px rgba(219, 39, 119, 0.12);
+    border: 1.5px solid rgba(219, 39, 119, 0.18);
+    margin-bottom: 24px;
+  }
+  .headline {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1.26;
+    color: #0f172a;
+    letter-spacing: -1.5px;
+  }
+  .highlight {
+    background: linear-gradient(135deg, #db2777, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 30px;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  /* 스마트폰 프레임 목업 */
+  .phone-frame {
+    width: 760px;
+    height: 1460px;
+    margin-top: 60px;
+    background: #09061c;
+    border-radius: 64px;
+    border: 14px solid #1e1b4b;
+    box-shadow: 0 40px 100px rgba(219, 39, 119, 0.22), 0 10px 30px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone-top-bar {
+    height: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 36px;
+    font-size: 18px;
+    color: #94a3b8;
+    font-weight: 700;
+    z-index: 10;
+  }
+  .phone-content {
+    flex: 1;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .title-bar {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .game-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .game-card {
+    background: linear-gradient(160deg, rgba(139,92,246,0.32), rgba(236,72,153,0.2));
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 28px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card .emoji { font-size: 52px; margin-bottom: 6px; }
+  .game-card .gname { font-size: 24px; font-weight: 900; color: #fff; }
+  .game-card .gdesc { font-size: 16px; color: #cbd5e1; line-height: 1.35; }
+  .game-card .gtag { font-size: 14px; font-weight: 800; color: #fbbf24; margin-top: 8px; }
+  .game-card.hot::after {
+    content: "🔥 인기";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge-pill">🎲 7종 파티게임</div>
+    <h1 class="headline">모임·술자리 인기 게임이<br/><span class="highlight">한자리에 모두 모였다</span></h1>
+    <p class="subtitle">라이어, 스피드퀴즈, 블랙잭, 바퀴벌레 포커, 달무티, 카멜레온</p>
+  </div>
+
+  <div class="phone-frame">
+    <div class="phone-top-bar">
+      <span>12:34</span>
+      <span>📶 5G 100%</span>
+    </div>
+    <div class="phone-content">
+      <div class="title-bar">
+        <span>어떤 게임을 할까요? 🎮</span>
+        <span style="font-size:16px; color:#fbbf24; background:rgba(245,158,11,0.2); padding:6px 14px; border-radius:999px;">방장 선택 모드</span>
+      </div>
+
+      <div class="game-grid">
+        <div class="game-card hot">
+          <span class="emoji">🕵️‍♂️</span>
+          <span class="gname">라이어 게임</span>
+          <span class="gdesc">오타 인정 & AI 모드 완비! 진짜 거짓말쟁이는 누구?</span>
+          <span class="gtag">3~12명</span>
+        </div>
+        <div class="game-card hot">
+          <span class="emoji">⚡</span>
+          <span class="gname">스피드 퀴즈</span>
+          <span class="gdesc">레드팀 vs 블루팀! 몸으로 설명하고 맞히는 퀴즈 배틀</span>
+          <span class="gtag">4~30명</span>
+        </div>
+        <div class="game-card">
+          <span class="emoji">🃏</span>
+          <span class="gname">카지노 블랙잭</span>
+          <span class="gdesc">정통 52장 덱과 딜러 AI! 포인트 배팅 한판 승부</span>
+          <span class="gtag">2~12명</span>
+        </div>
+        <div class="game-card">
+          <span class="emoji">🪳</span>
+          <span class="gname">바퀴벌레 포커</span>
+          <span class="gdesc">쫄깃한 블러핑 카드게임! 최고의 바보를 가려라</span>
+          <span class="gtag">2~6명</span>
+        </div>
+        <div class="game-card">
+          <span class="emoji">👑</span>
+          <span class="gname">달무티</span>
+          <span class="gdesc">인생은 불공평합니다! 계급과 세금 교환의 꿀잼 카드전</span>
+          <span class="gtag">4~8명</span>
+        </div>
+        <div class="game-card">
+          <span class="emoji">🦎</span>
+          <span class="gname">카멜레온</span>
+          <span class="gdesc">16개 단어 격자 추리! 카멜레온을 찾아 암호를 지켜라</span>
+          <span class="gtag">3~12명</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

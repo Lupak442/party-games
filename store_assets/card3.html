@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1080px;
+    height: 1920px;
+    background: radial-gradient(circle at 50% 20%, #fef3c7 0%, #fffbeb 40%, #f8fafc 100%);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    padding-top: 110px;
+  }
+  .header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 34px;
+    background: #ffffff;
+    border-radius: 999px;
+    font-size: 26px;
+    font-weight: 800;
+    color: #d97706;
+    box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12);
+    border: 1.5px solid rgba(217, 119, 6, 0.2);
+    margin-bottom: 24px;
+  }
+  .headline {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1.26;
+    color: #0f172a;
+    letter-spacing: -1.5px;
+  }
+  .highlight {
+    background: linear-gradient(135deg, #d97706, #ea580c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 30px;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  /* 스마트폰 프레임 목업 */
+  .phone-frame {
+    width: 760px;
+    height: 1460px;
+    margin-top: 60px;
+    background: #09061c;
+    border-radius: 64px;
+    border: 14px solid #1e1b4b;
+    box-shadow: 0 40px 100px rgba(217, 119, 6, 0.22), 0 10px 30px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone-top-bar {
+    height: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 36px;
+    font-size: 18px;
+    color: #94a3b8;
+    font-weight: 700;
+    z-index: 10;
+  }
+  .phone-content {
+    flex: 1;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .rank-banner {
+    background: linear-gradient(90deg, rgba(245,158,11,0.2), rgba(168,85,247,0.25));
+    border: 1.5px solid rgba(251,191,36,0.5);
+    border-radius: 20px;
+    padding: 16px 20px;
+    font-size: 18px;
+    color: #fde68a;
+    text-align: center;
+    font-weight: 800;
+  }
+  .r-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .r-row {
+    height: 90px;
+    border-radius: 24px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .r-row.r1 {
+    background: linear-gradient(90deg, #f59e0b, #fde047 50%, #f59e0b);
+    border: 2px solid #fff7c2;
+    box-shadow: 0 0 30px rgba(251,191,36,0.7);
+    color: #2b1300;
+  }
+  .r-row.r2 {
+    background: linear-gradient(90deg, #38bdf8, #818cf8 50%, #38bdf8);
+    border: 2px solid #bae6fd;
+    box-shadow: 0 0 25px rgba(56,189,248,0.6);
+    color: #082f49;
+  }
+  .r-row.r3 {
+    background: linear-gradient(90deg, #fb7185, #fb923c 50%, #fb7185);
+    border: 2px solid #fecdd3;
+    box-shadow: 0 0 20px rgba(244,63,94,0.5);
+    color: #4c0519;
+  }
+  .r-row.babo {
+    background: linear-gradient(90deg, #78350f, #92400e 50%, #78350f);
+    border: 2px solid #f59e0b;
+    color: #fff;
+  }
+  .rpos { font-size: 34px; font-weight: 900; width: 44px; text-align: center; }
+  .ravatar { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; font-weight: 900; background: rgba(0,0,0,0.2); }
+  .rname { flex: 1; font-size: 26px; font-weight: 900; }
+  .vip-badge { background: #7c3aed; color: #fff; font-size: 13px; font-weight: 900; padding: 2px 8px; border-radius: 6px; margin-left: 6px; }
+  .babo-badge { background: #fde68a; color: #78350f; font-size: 14px; font-weight: 900; padding: 3px 10px; border-radius: 8px; margin-left: 6px; }
+  .rscore { font-size: 38px; font-weight: 900; }
+  .radj { display: flex; gap: 6px; }
+  .radj button { width: 36px; height: 36px; border-radius: 12px; background: rgba(0,0,0,0.25); border: none; font-size: 22px; font-weight: 900; color: inherit; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge-pill">🏆 실시간 랭킹</div>
+    <h1 class="headline">점수가 엎치락뒤치락<br/><span class="highlight">짜릿한 실시간 랭킹전</span></h1>
+    <p class="subtitle">1·2·3위 VIP 네온 오로라 효과와 포인트 증감 파티클 연출</p>
+  </div>
+
+  <div class="phone-frame">
+    <div class="phone-top-bar">
+      <span>12:34</span>
+      <span>📶 5G 100%</span>
+    </div>
+    <div class="phone-content">
+      <div class="rank-banner">✨ 프리미엄 VIP 혜택 적용 중: 네온 오로라 & 스파클 파티클!</div>
+
+      <div class="r-list">
+        <div class="r-row r1">
+          <div class="rpos">🥇</div>
+          <div class="ravatar">민</div>
+          <div class="rname">민준이 👑 <span class="vip-badge">VIP</span></div>
+          <div class="rscore">24점</div>
+          <div class="radj"><button>−</button><button>+</button></div>
+        </div>
+
+        <div class="r-row r2">
+          <div class="rpos">🥈</div>
+          <div class="ravatar">지</div>
+          <div class="rname">지은이 <span class="vip-badge" style="background:#0284c7;">VIP</span></div>
+          <div class="rscore">19점</div>
+          <div class="radj"><button>−</button><button>+</button></div>
+        </div>
+
+        <div class="r-row r3">
+          <div class="rpos">🥉</div>
+          <div class="ravatar">현</div>
+          <div class="rname">현우 <span class="vip-badge" style="background:#e11d48;">VIP</span></div>
+          <div class="rscore">15점</div>
+          <div class="radj"><button>−</button><button>+</button></div>
+        </div>
+
+        <div class="r-row babo">
+          <div class="rpos">4</div>
+          <div class="ravatar">수</div>
+          <div class="rname">수진이 <span class="babo-badge">🪳🤪 바보</span></div>
+          <div class="rscore" style="color:#fde68a;">8점</div>
+          <div class="radj"><button>−</button><button>+</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
