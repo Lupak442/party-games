@@ -26,8 +26,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.android.billingclient.api.AcknowledgePurchaseParams
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
 
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
@@ -37,6 +51,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var btnSettings: Button
     private lateinit var prefs: SharedPreferences
 
+    // Google AdMob
+    private var interstitialAd: InterstitialAd? = null
+    private var isLoadingAd: Boolean = false
+
+    // Google Play Billing
+    private lateinit var billingClient: BillingClient
+
     private var backPressedTime: Long = 0
 
     companion object {
@@ -44,6 +65,8 @@ class MainActivity : ComponentActivity() {
         private const val KEY_SERVER_URL = "server_url"
         // 10.0.2.2는 안드로이드 에뮬레이터에서 PC의 localhost:3000에 접속하는 공식 루프백 주소입니다.
         const val DEFAULT_SERVER_URL = "http://10.0.2.2:3000"
+        // 구글 AdMob 공식 전면 테스트 광고 단위 ID
+        const val TEST_INTERSTITIAL_AD_ID = "ca-app-pub-3940256099942544/1033173712"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -64,9 +87,141 @@ class MainActivity : ComponentActivity() {
         setupWebView()
         setupBackPress()
 
+        // 1. Google AdMob 초기화 & 첫 번째 광고 미리 로드
+        initAdMob()
+
+        // 2. Google Play Billing 초기화
+        initBilling()
+
         loadGameUrl()
     }
 
+    /* ---- 1. Google AdMob 초기화 및 전면 광고 로드 ---- */
+    private fun initAdMob() {
+        MobileAds.initialize(this) {
+            loadInterstitialAd()
+        }
+    }
+
+    private fun loadInterstitialAd() {
+        if (isLoadingAd || interstitialAd != null) return
+        isLoadingAd = true
+
+        val adRequest = AdRequest.Builder().build()
+        InterstitialAd.load(
+            this,
+            TEST_INTERSTITIAL_AD_ID,
+            adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    interstitialAd = ad
+                    isLoadingAd = false
+                    setupAdCallbacks()
+                }
+
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    interstitialAd = null
+                    isLoadingAd = false
+                }
+            }
+        )
+    }
+
+    private fun setupAdCallbacks() {
+        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                interstitialAd = null
+                notifyAdCompleted()
+                loadInterstitialAd() // 다음 판을 위해 미리 백그라운드 프리로드
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                interstitialAd = null
+                notifyAdCompleted()
+                loadInterstitialAd()
+            }
+        }
+    }
+
+    private fun showNativeAd() {
+        runOnUiThread {
+            if (interstitialAd != null) {
+                interstitialAd?.show(this)
+            } else {
+                // 광고가 아직 로드되지 않았거나 네트워크 지연 시 딜레이 없이 바로 게임 시작
+                notifyAdCompleted()
+                loadInterstitialAd()
+            }
+        }
+    }
+
+    private fun notifyAdCompleted() {
+        webView.evaluateJavascript(
+            "if (window.Local && typeof Local.onNativeAdComplete === 'function') { Local.onNativeAdComplete(); }",
+            null
+        )
+    }
+
+    /* ---- 2. Google Play Billing 초기화 및 인앱결제 처리 ---- */
+    private fun initBilling() {
+        val pendingParams = PendingPurchasesParams.newBuilder()
+            .enableOneTimeProducts()
+            .build()
+
+        billingClient = BillingClient.newBuilder(this)
+            .setListener(this)
+            .enablePendingPurchases(pendingParams)
+            .build()
+
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                // Billing 연결 성공
+            }
+
+            override fun onBillingServiceDisconnected() {
+                // 필요 시 재연결
+            }
+        })
+    }
+
+    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
+        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            for (purchase in purchases) {
+                handlePurchase(purchase)
+            }
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            Toast.makeText(this, "결제가 취소되었습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun handlePurchase(purchase: Purchase) {
+        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            if (!purchase.isAcknowledged) {
+                val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.purchaseToken)
+                    .build()
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        notifyPurchaseSuccess()
+                    }
+                }
+            } else {
+                notifyPurchaseSuccess()
+            }
+        }
+    }
+
+    private fun notifyPurchaseSuccess() {
+        runOnUiThread {
+            Toast.makeText(this, "👑 프리미엄 멤버십이 활성화되었습니다!", Toast.LENGTH_LONG).show()
+            webView.evaluateJavascript(
+                "if (window.Local && typeof Local.onNativePurchaseSuccess === 'function') { Local.onNativePurchaseSuccess('premium_monthly'); }",
+                null
+            )
+        }
+    }
+
+    /* ---- 3. UI 및 웹뷰 세팅 ---- */
     private fun setupUI() {
         val root = android.widget.FrameLayout(this).apply {
             setBackgroundColor(Color.parseColor("#070514"))
@@ -299,6 +454,29 @@ class MainActivity : ComponentActivity() {
         fun showToast(message: String) {
             runOnUiThread {
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 네이티브 구글 AdMob 전면 광고 요청
+        @JavascriptInterface
+        fun showNativeAd() {
+            this@MainActivity.showNativeAd()
+        }
+
+        // 네이티브 구글 플레이 인앱결제 요청
+        @JavascriptInterface
+        fun requestInAppPurchase(productId: String) {
+            runOnUiThread {
+                Toast.makeText(context, "구글 플레이 결제창 연결 중… ($productId)", Toast.LENGTH_SHORT).show()
+                // 실제 출시 시 queryProductDetails & launchBillingFlow 수행. 테스트용으로 즉시 승인 시뮬레이션:
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("👑 프리미엄 멤버십 구독 (테스트)")
+                    .setMessage("월 2,900원 결제를 진행하시겠습니까?\n(테스트 환경에서는 즉시 VIP가 적용됩니다)")
+                    .setPositiveButton("결제 완료") { _, _ ->
+                        notifyPurchaseSuccess()
+                    }
+                    .setNegativeButton("취소", null)
+                    .show()
             }
         }
 

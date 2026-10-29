@@ -222,7 +222,26 @@ const Local = {
       act('room.selectGame', { id: gameId });
       return;
     }
+    // 안드로이드 앱인 경우 네이티브 AdMob 전면 광고 호출
+    if (window.AndroidBridge && typeof window.AndroidBridge.showNativeAd === 'function') {
+      pendingGameId = gameId;
+      window.AndroidBridge.showNativeAd();
+      return;
+    }
+    // 일반 웹 브라우저 접속 시 5초 웹 광고 모달 표시
     Local.showAd(gameId);
+  },
+  onNativeAdComplete() {
+    if (pendingGameId) {
+      act('room.selectGame', { id: pendingGameId });
+      pendingGameId = null;
+    }
+  },
+  onNativePurchaseSuccess(productId) {
+    act('room.setPremium', { isPremium: true }).then(() => {
+      toast('👑 프리미엄 멤버십이 적용되었습니다! 광고가 영구 제거되었습니다.', 'ok');
+      Local.closeAd();
+    });
   },
   showAd(gameId) {
     pendingGameId = gameId;
@@ -257,6 +276,10 @@ const Local = {
     }
   },
   buyPremium() {
+    if (window.AndroidBridge && typeof window.AndroidBridge.requestInAppPurchase === 'function') {
+      window.AndroidBridge.requestInAppPurchase('premium_monthly');
+      return;
+    }
     if (!confirm('👑 파티 게임즈 프리미엄 멤버십에 가입하시겠습니까?\n\n- 모든 게임 광고 제거 (0초 즉시 시작)\n- 랭킹 VIP 네온 골드 오로라 효과\n- 포인트 증감 파티클 연출\n- 스피드 퀴즈 팀장 직접 출제 등 특별 룰 해금')) return;
     act('room.setPremium', { isPremium: true }).then(() => {
       toast('👑 프리미엄 멤버십이 적용되었습니다! 광고가 제거되었습니다.', 'ok');
