@@ -73,6 +73,7 @@ function viewFor(room, p) {
       maxPlayers: room.maxPlayers,
       hostId: room.hostId,
       gameId: room.game ? room.game.id : null,
+      isPremium: !!room.isPremium,
       babo: room.babo || null,
       players: room.players.map((x) => ({ id: x.id, name: x.name, score: x.score, joinedAt: x.joinedAt, online: isOnline(room, x.id) })),
     },
@@ -182,6 +183,15 @@ function roomAction(room, p, type, pl) {
       room.game = { id: g.id, state: g.init(room) }; return;
     }
     case 'endGame': needHost(); room.game = null; return;
+    case 'setPremium': {
+      needHost();
+      room.isPremium = !!pl.isPremium;
+      emitAll(room, 'toast', { 
+        msg: room.isPremium ? '👑 프리미엄 방이 적용되었어요! (특별 룰 해금 & 광고 면제)' : '무료 모드로 변경되었어요', 
+        kind: 'info' 
+      });
+      return;
+    }
     case 'rename': {
       const n = cleanName(pl.name); if (!n) throw fail('이름을 입력해주세요');
       if (room.players.some((x) => x.id !== p.id && x.name === n)) throw fail('이미 있는 이름이에요');
@@ -200,10 +210,22 @@ function attach(socket) {
   };
 
   socket.on('room:create', safe((d) => {
+    if (!d.isApp) throw fail('방 만들기는 [파티 게임즈] 앱에서만 가능해요! 앱을 설치해주세요.');
     const name = cleanName(d.name); if (!name) throw fail('이름을 입력해주세요');
     const max = Math.min(30, Math.max(2, Math.round(Number(d.maxPlayers)) || 8));
     const p = newPlayer(name);
-    const room = { code: genCode(), createdAt: Date.now(), updatedAt: Date.now(), maxPlayers: max, hostId: p.id, hostAwaySince: null, players: [p], game: null, usedWords: [] };
+    const room = { 
+      code: genCode(), 
+      createdAt: Date.now(), 
+      updatedAt: Date.now(), 
+      maxPlayers: max, 
+      hostId: p.id, 
+      hostAwaySince: null, 
+      isPremium: !!d.isPremium,
+      players: [p], 
+      game: null, 
+      usedWords: [] 
+    };
     rooms.set(room.code, room);
     bind(socket, room, p);
     return { ok: true, code: room.code, token: p.token };

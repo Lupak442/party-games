@@ -35,13 +35,14 @@
     <section class="glass card-form">
       <div class="seg" role="tablist">
         <button id="segJoin" class="on" data-local="seg" data-v="join">방 참가</button>
-        <button id="segCreate" data-local="seg" data-v="create">방 만들기</button>
+        <button id="segCreate" data-local="seg" data-v="create">방 만들기 <span class="app-tag">앱 전용</span></button>
       </div>
 
       <label class="field"><span>내 이름</span>
         <input id="inName" maxlength="12" placeholder="예) 민수" autocomplete="off" />
       </label>
 
+      <!-- 1. 방 참가 폼 (웹 & 앱 공용) -->
       <div id="formJoin">
         <label class="field"><span>초대코드</span>
           <input id="inCode" maxlength="5" placeholder="ABCDE" autocomplete="off" autocapitalize="characters" class="code-input" />
@@ -50,15 +51,58 @@
         <button id="btnJoin" class="btn primary block" data-local="join">입장하기</button>
       </div>
 
+      <!-- 2. 웹 접속자용 방 만들기 차단 안내 -->
+      <div id="formAppOnly" hidden>
+        <div class="app-only-card center">
+          <div class="app-icon">📱👑</div>
+          <h3>방 만들기는 앱 전용 기능이에요!</h3>
+          <p class="muted">
+            초대 링크를 받으신 분은 <b>'방 참가'</b>에서 바로 입장하실 수 있습니다.<br/>
+            직접 방을 만들고 친구들을 초대하시려면 <b>[파티 게임즈 앱]</b>을 이용해주세요!
+          </p>
+          <button class="btn accent block" onclick="Local.downloadApp()">📲 파티 게임즈 방장용 앱 설치</button>
+          <button class="btn ghost sm block" style="margin-top:8px;" onclick="Local.toggleAppMode()">🔧 [개발/테스트] 앱 모드 활성화 토글</button>
+        </div>
+      </div>
+
+      <!-- 3. 앱 접속자 전용 방 만들기 폼 -->
       <div id="formCreate" hidden>
         <label class="field"><span>최대 인원 <b id="maxVal">8</b>명</span>
           <input id="inMax" type="range" min="2" max="30" value="8" />
+        </label>
+        <label class="field-check glass" style="margin:8px 0 14px 0; padding:10px 12px; border-radius:10px; cursor:pointer;">
+          <input type="checkbox" id="inPremium" checked />
+          <span><b>👑 프리미엄 혜택 활성화</b> <small class="muted block">특별 룰 해금(스피드 퀴즈 팀장 직접 출제 등) · 랭킹 네온 효과 · 광고 면제</small></span>
         </label>
         <button id="btnCreate" class="btn primary block" data-local="create">방 만들고 방장 되기 👑</button>
       </div>
       <p id="landErr" class="err" hidden></p>
     </section>
   </main>
+
+  <!-- 전면 광고 모달 (무료 방장이 다른 게임 선택 시) -->
+  <div id="adModal" class="ad-modal" hidden>
+    <div class="ad-card glass">
+      <div class="ad-head">
+        <span class="ad-badge">스폰서 광고 [AD]</span>
+        <button id="adCloseBtn" class="btn ghost sm" disabled onclick="Local.closeAd()">
+          <span id="adTimer">5초 후 건너뛰기</span>
+        </button>
+      </div>
+      <div class="ad-body">
+        <div class="ad-sponsor-art">
+          <div class="sponsor-emoji">🎉🍔✈️</div>
+          <h2>파티 게임즈 x 특별 스폰서</h2>
+          <p class="muted">친구들과 함께하는 최고의 파티 타임!</p>
+          <div class="ad-progress-bar"><div id="adProgress" class="ad-progress-fill"></div></div>
+        </div>
+      </div>
+      <div class="ad-footer">
+        <div class="ad-vip-tip">👑 <b>프리미엄 구독자</b>는 모든 광고가 0초 만에 스킵됩니다!</div>
+        <button class="btn gold sm" onclick="Local.buyPremium()">프리미엄 멤버십 가입</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 방 -->
   <div id="room" class="room" hidden>

@@ -79,6 +79,31 @@ function confetti() {
 }
 
 /* ---- 공용 렌더 헬퍼 ---- */
+function sparkleEffect() {
+  const emojis = ['✨', '💎', '⭐', '🪙', '👑'];
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('div');
+    el.className = 'prem-sparkle';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = (Math.random() * 80 + 10) + 'vw';
+    el.style.top = (Math.random() * 60 + 20) + 'vh';
+    el.style.animationDuration = (1.2 + Math.random() * 0.8) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+}
+
+function isAppHost() {
+  if (window.isPartyGamesApp || window.AndroidBridge) return true;
+  if (localStorage.getItem('pg_is_app') === '1') return true;
+  const p = new URLSearchParams(location.search);
+  if (p.get('app') === '1') {
+    localStorage.setItem('pg_is_app', '1');
+    return true;
+  }
+  return false;
+}
+
 const hue = (id) => { let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
 const avatar = (name, id) => `<div class="avatar" style="--h:${hue(id)}">${esc([...String(name)][0] || '?')}</div>`;
 const serverNow = () => Date.now() + S.offset;
@@ -117,17 +142,47 @@ function previewRoom() {
   });
 }
 
+let pendingGameId = null;
+let adTimerInterval = null;
+let adSecondsLeft = 5;
+
 const Local = {
   seg(el) {
     const create = el.dataset.v === 'create';
     $('#segJoin').classList.toggle('on', !create); $('#segCreate').classList.toggle('on', create);
-    show('#formJoin', !create); show('#formCreate', create); landErr('');
+    show('#formJoin', !create);
+    if (create) {
+      if (isAppHost()) {
+        show('#formCreate', true); show('#formAppOnly', false);
+      } else {
+        show('#formCreate', false); show('#formAppOnly', true);
+      }
+    } else {
+      show('#formCreate', false); show('#formAppOnly', false);
+    }
+    landErr('');
+  },
+  downloadApp() {
+    alert('구글 플레이스토어 출시 준비 중입니다!\n\n출시 전 테스트를 위해 아래 [앱 모드 활성화 토글] 버튼을 누르시면 지금 바로 방장 앱 기능을 테스트하실 수 있습니다.');
+  },
+  toggleAppMode() {
+    const cur = localStorage.getItem('pg_is_app') === '1';
+    localStorage.setItem('pg_is_app', cur ? '0' : '1');
+    toast(cur ? '일반 웹 모드로 전환되었어요' : '방장 앱 모드가 활성화되었어요! 📱👑', 'ok');
+    setTimeout(() => location.reload(), 400);
   },
   claim(el) { $('#inName').value = el.dataset.v; },
   create() {
+    if (!isAppHost()) return landErr('방 만들기는 [파티 게임즈] 앱에서만 가능해요!');
     const name = $('#inName').value.trim(); if (!name) return landErr('이름을 입력해주세요');
+    const isPremium = $('#inPremium') ? $('#inPremium').checked : false;
     localStorage.setItem('pg_name', name);
-    socket.emit('room:create', { name, maxPlayers: Number($('#inMax').value) }, (r) => {
+    socket.emit('room:create', { 
+      name, 
+      maxPlayers: Number($('#inMax').value),
+      isApp: true,
+      isPremium 
+    }, (r) => {
       if (!r.ok) return landErr(r.error); saveSession({ code: r.code, token: r.token });
     });
   },
@@ -156,6 +211,54 @@ const Local = {
     if (!confirm('방에서 나갈까요?\n내 자리(점수 포함)는 남아 있어서, 같은 이름으로 다시 들어오면 돌아올 수 있어요.')) return;
     socket.emit('room:leave', {}, () => { saveSession(null); S.state = null; showLanding(); });
   },
+  selectGame(el) {
+    const st = S.state; if (!st || st.me !== st.room.hostId) return;
+    const gameId = el.dataset.v; if (!gameId) return;
+    if (st.room.isPremium) {
+      act('room.selectGame', { id: gameId });
+      return;
+    }
+    Local.showAd(gameId);
+  },
+  showAd(gameId) {
+    pendingGameId = gameId;
+    adSecondsLeft = 5;
+    show('#adModal', true);
+    $('#adCloseBtn').disabled = true;
+    $('#adTimer').textContent = `${adSecondsLeft}초 후 건너뛰기`;
+    $('#adProgress').style.width = '0%';
+
+    clearInterval(adTimerInterval);
+    const start = Date.now();
+    adTimerInterval = setInterval(() => {
+      const elapsed = (Date.now() - start) / 1000;
+      const pct = Math.min(100, (elapsed / 5) * 100);
+      $('#adProgress').style.width = pct + '%';
+      adSecondsLeft = Math.max(0, Math.ceil(5 - elapsed));
+      if (adSecondsLeft > 0) {
+        $('#adTimer').textContent = `${adSecondsLeft}초 후 건너뛰기`;
+      } else {
+        clearInterval(adTimerInterval);
+        $('#adCloseBtn').disabled = false;
+        $('#adTimer').textContent = '✕ 닫고 게임 시작';
+      }
+    }, 100);
+  },
+  closeAd() {
+    clearInterval(adTimerInterval);
+    show('#adModal', false);
+    if (pendingGameId) {
+      act('room.selectGame', { id: pendingGameId });
+      pendingGameId = null;
+    }
+  },
+  buyPremium() {
+    if (!confirm('👑 파티 게임즈 프리미엄 멤버십에 가입하시겠습니까?\n\n- 모든 게임 광고 제거 (0초 즉시 시작)\n- 랭킹 VIP 네온 골드 오로라 효과\n- 포인트 증감 파티클 연출\n- 스피드 퀴즈 팀장 직접 출제 등 특별 룰 해금')) return;
+    act('room.setPremium', { isPremium: true }).then(() => {
+      toast('👑 프리미엄 멤버십이 적용되었습니다! 광고가 제거되었습니다.', 'ok');
+      Local.closeAd();
+    });
+  },
 };
 
 /* ---- 방 렌더 ---- */
@@ -174,7 +277,8 @@ function renderRoom() {
   $('#roomCode').textContent = st.room.code;
   const m = me(), ri = rankInfo(), isHost = st.me === st.room.hostId;
   const isBabo = st.room.babo && st.room.babo.playerId === m.id;
-  $('#meChip').innerHTML = `${isHost ? '👑 ' : ''}${esc(m.name)}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
+  const isPrem = !!st.room.isPremium;
+  $('#meChip').innerHTML = `${isPrem ? '<span class="prem-chip-crown" title="프리미엄 혜택 활성화 중">👑VIP</span> ' : ''}${isHost ? '👑 ' : ''}${esc(m.name)}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
   ['game', 'rank', 'people'].forEach((t) => $('#tab-' + t).classList.toggle('on', S.tab === t));
   const html = S.tab === 'game' ? gameTab() : S.tab === 'rank' ? rankTab() : peopleTab();
   morph($('#roomBody'), html);
@@ -190,15 +294,18 @@ function gameTab() {
   if (!st.room.gameId) {
     const n = st.room.players.length;
     return `<div class="stack">
-      <h2 class="sec">${isHost ? '어떤 게임을 할까요?' : '방장이 게임을 고르는 중…'}</h2>
+      <div class="row-between">
+        <h2 class="sec" style="margin:0;">${isHost ? '어떤 게임을 할까요?' : '방장이 게임을 고르는 중…'}</h2>
+        ${st.room.isPremium ? '<span class="badge gold">👑 프리미엄 방</span>' : '<span class="badge muted">무료 방 (게임 변경 시 광고)</span>'}
+      </div>
       ${isHost ? '' : '<div class="glass pulse-box">⏳ 잠시만 기다려주세요</div>'}
       <div class="game-grid">${st.catalog.map((g) => `
-        <button class="game-card ${isHost ? '' : 'dim'}" ${isHost ? `data-send="room.selectGame" ${pl({ id: g.id })}` : 'disabled'}>
+        <button class="game-card ${isHost ? '' : 'dim'}" ${isHost ? `data-local="selectGame" data-v="${g.id}"` : 'disabled'}>
           <span class="gi">${g.icon}</span><b>${esc(g.name)}</b><small>${esc(g.desc)}</small>
           <em>${g.minPlayers}명~ ${n < g.minPlayers ? '· 인원 부족' : ''}</em>
         </button>`).join('')}
       </div>
-      <p class="hint">새로운 게임은 앞으로 계속 추가돼요 ✨</p>
+      <p class="hint">${isHost && !st.room.isPremium ? '💡 프리미엄 방장은 게임 선택 시 광고 없이 0초 만에 바로 시작할 수 있어요 ✨' : '새로운 게임은 앞으로 계속 추가돼요 ✨'}</p>
     </div>`;
   }
   const meta = st.catalog.find((g) => g.id === st.room.gameId);
@@ -221,12 +328,18 @@ function gameTab() {
 function rankTab() {
   const st = S.state, isHost = st.me === st.room.hostId, ri = rankInfo(), n = ri.sorted.length;
   const babo = st.room.babo;
+  const isPrem = !!st.room.isPremium;
   const rows = [...st.room.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => {
     const idx = ri.order.get(p.id), rk = ri.rank.get(p.id);
     let cls = '';
     if (!ri.allSame) {
       if (rk <= 3) cls = 'r' + rk;
       else if (idx >= n - 2) cls = 'low';
+      if (isPrem) {
+        if (rk === 1) cls += ' prem-rank-1';
+        else if (rk === 2) cls += ' prem-rank-2';
+        else if (rk === 3) cls += ' prem-rank-3';
+      }
     }
     const isPlayerBabo = babo && babo.playerId === p.id;
     if (isPlayerBabo) cls += ' is-babo';
@@ -235,8 +348,9 @@ function rankTab() {
       <div class="rpos">${cls.startsWith('r') && !ri.allSame ? medal : rk}</div>
       ${avatar(p.name, p.id)}
       <div class="rname">
-        ${esc(p.name)}
+        <span class="name-text">${esc(p.name)}</span>
         ${p.id === st.room.hostId ? ' <span title="방장">👑</span>' : ''}
+        ${isPrem && rk <= 3 && !ri.allSame ? ' <span class="badge-vip-glow">VIP</span>' : ''}
         ${isPlayerBabo ? ' <span class="r-babo-tag" title="바퀴벌레 바보">🪳🤪</span>' : ''}
         ${p.online ? '' : ' <small class="off">오프라인</small>'}
       </div>
@@ -246,7 +360,17 @@ function rankTab() {
       ${cls.includes('low') ? '<span class="rain">🌧️</span>' : ''}
     </div>`;
   }).join('');
-  return `<div class="stack"><h2 class="sec">🏆 실시간 랭킹</h2>
+
+  return `<div class="stack">
+    <div class="row-between">
+      <h2 class="sec" style="margin:0;">🏆 실시간 랭킹</h2>
+      ${isHost ? `
+        <button class="btn sm ${isPrem ? 'gold' : 'ghost'}" data-send="room.setPremium" ${pl({ isPremium: !isPrem })}>
+          ${isPrem ? '👑 VIP 활성화 중' : '👑 프리미엄 혜택 활성화'}
+        </button>
+      ` : isPrem ? '<span class="badge gold">👑 VIP 프리미엄 방</span>' : ''}
+    </div>
+    ${isPrem ? '<div class="prem-status-banner">✨ <b>프리미엄 VIP 혜택 적용 중</b>: 랭킹 네온 오로라 효과 & 포인트 증감 연출 활성화!</div>' : ''}
     <div class="board" style="height:${n * ROW}px">${rows}</div>
     ${isHost ? '<p class="hint">방장은 − / + 버튼으로 점수를 바로 조절할 수 있어요</p>' : ''}
   </div>`;
@@ -291,7 +415,10 @@ socket.on('state', (st) => {
   if (!S.session) { /* 방금 만든 방: 세션 저장이 ack보다 늦게 올 수 있음 */ }
   renderRoom();
 });
-socket.on('toast', (t) => toast(t.msg, t.kind));
+socket.on('toast', (t) => {
+  toast(t.msg, t.kind);
+  if (t.kind === 'up' && S.state && S.state.room && S.state.room.isPremium) sparkleEffect();
+});
 socket.on('kicked', () => { saveSession(null); S.state = null; showLanding('방장이 방에서 내보냈어요'); });
 
 let connTimer;

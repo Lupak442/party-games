@@ -82,11 +82,19 @@ module.exports = {
       case 'settings': {
         needHost(); if (g.phase !== 'setup') return;
         applySettings(g.settings, pl);
+        if (g.settings.source === 'custom' && !room.isPremium) {
+          g.settings.source = 'builtin';
+          throw fail('팀장 직접 제시어 작성 모드는 프리미엄 전용 기능이에요 👑');
+        }
         return;
       }
       case 'start': {
         needHost(); if (g.phase !== 'setup') return;
         applySettings(g.settings, pl);
+        if (g.settings.source === 'custom' && !room.isPremium) {
+          g.settings.source = 'builtin';
+          throw fail('팀장 직접 제시어 작성 모드는 프리미엄 전용 기능이에요 👑');
+        }
         if (!members(room, g, 'red').length || !members(room, g, 'blue').length) throw fail('빨강팀과 파랑팀에 각각 1명 이상 배정해주세요');
         const s = g.settings;
         g.reps = { red: repOf(room, g, 'red'), blue: repOf(room, g, 'blue') };

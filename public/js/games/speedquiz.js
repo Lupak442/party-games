@@ -14,8 +14,9 @@ GameUI.speedquiz = {
     </div>`;
   },
 
-  p_setup({ G, isHost, appMeta }) {
+  p_setup({ G, isHost, appMeta, room }) {
     const s = G.settings;
+    const isPremium = room && room.isPremium;
     const teams = `<div class="teams">${this.teamBox(G, 'red', isHost, 'setRep')}${this.teamBox(G, 'blue', isHost, 'setRep')}</div>`;
     const builtins = (appMeta && appMeta.builtinTopics && appMeta.builtinTopics.length)
       ? appMeta.builtinTopics
@@ -25,7 +26,7 @@ GameUI.speedquiz = {
           { name: '직업', count: 22 }, { name: '스포츠', count: 22 }
         ];
 
-    const sourceName = s.source === 'builtin' ? '📚 내장 주제' : s.source === 'ai' ? '🤖 AI 출제' : '✍️ 대표 직접 입력';
+    const sourceName = s.source === 'builtin' ? '📚 내장 주제' : s.source === 'ai' ? '🤖 AI 출제' : '✍️ 대표 직접 입력 👑';
 
     if (!isHost) {
       return `<div class="glass"><h3>⚡ 팀 구성</h3>${teams}
@@ -41,12 +42,19 @@ GameUI.speedquiz = {
         <button class="${p.team === 'none' ? 'on' : ''}" data-send="game.setTeam" ${pl({ id: p.id, team: null })}>—</button>
         <button class="${p.team === 'blue' ? 'on blue' : ''}" data-send="game.setTeam" ${pl({ id: p.id, team: 'blue' })}>🔵</button></div></div>`).join('')}</div>
       ${teams}<p class="hint">⭐ 대표는 직접 입력 모드에서 문제를 입력해요 (기본: 팀 첫 번째 사람)</p></div>
-    <div class="glass" id="sqForm"><h3>설정</h3>${G.error ? `<p class="err">${esc(G.error)}</p>` : ''}
+    <div class="glass" id="sqForm">
+      <div class="row-between">
+        <h3 style="margin:0;">설정</h3>
+        ${isPremium ? '<span class="badge gold">👑 프리미엄 혜택 활성화</span>' : '<span class="badge muted">무료 방</span>'}
+      </div>
+      ${G.error ? `<p class="err">${esc(G.error)}</p>` : ''}
       <label class="field"><span>문제 출처</span>
         <select name="source" data-change-send="game.settings" data-collect="#sqForm">
           <option value="builtin" ${s.source === 'builtin' ? 'selected' : ''}>📚 내장 주제에서 출제 (추천)</option>
           <option value="ai" ${s.source === 'ai' ? 'selected' : ''}>🤖 AI가 주제에 맞게 자동 생성</option>
-          <option value="custom" ${s.source === 'custom' ? 'selected' : ''}>✍️ 팀 대표가 직접 입력</option>
+          <option value="custom" ${s.source === 'custom' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>
+            ✍️ 팀 대표 직접 입력 ${!isPremium ? '🔒 (프리미엄 전용)' : '👑'}
+          </option>
         </select>
       </label>
 
