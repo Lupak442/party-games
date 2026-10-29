@@ -19,4 +19,8 @@ rooms.init(io);
 io.on('connection', (socket) => rooms.attach(socket));
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Party Games running on http://localhost:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Party Games running on:`);
+  console.log(`  - Local:   http://localhost:${PORT}`);
+  console.log(`  - Network: http://192.168.0.200:${PORT}`);
+});

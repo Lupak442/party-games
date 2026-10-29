@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -45,6 +46,16 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
 
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
+
+    // 스플래시 & 서버 콜드스타트 대기 UI
+    private lateinit var splashLayout: LinearLayout
+    private lateinit var splashTitle: TextView
+    private lateinit var splashSubtitle: TextView
+    private lateinit var splashStatusText: TextView
+    private lateinit var splashProgressBar: ProgressBar
+    private var splashTimer: CountDownTimer? = null
+
+    // 오프라인/오류 화면
     private lateinit var errorLayout: LinearLayout
     private lateinit var errorMsg: TextView
     private lateinit var btnRetry: Button
@@ -63,8 +74,8 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
     companion object {
         private const val PREFS_NAME = "PartyGamesHostPrefs"
         private const val KEY_SERVER_URL = "server_url"
-        // 10.0.2.2는 안드로이드 에뮬레이터에서 PC의 localhost:3000에 접속하는 공식 루프백 주소입니다.
-        const val DEFAULT_SERVER_URL = "http://10.0.2.2:3000"
+        // Render 클라우드 공식 서버 주소
+        const val DEFAULT_SERVER_URL = "https://party-games-cxo2.onrender.com"
         // 구글 AdMob 공식 전면 테스트 광고 단위 ID
         const val TEST_INTERSTITIAL_AD_ID = "ca-app-pub-3940256099942544/1033173712"
     }
@@ -248,6 +259,59 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         }
         root.addView(progressBar)
 
+        // 스플래시 & 서버 콜드스타트 대기 화면
+        splashLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            setPadding(48, 48, 48, 48)
+            setBackgroundColor(Color.parseColor("#070514"))
+            layoutParams = android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+            )
+
+            val logo = TextView(this@MainActivity).apply {
+                text = "🎲👑"
+                textSize = 56f
+                gravity = android.view.Gravity.CENTER
+            }
+            addView(logo)
+
+            splashTitle = TextView(this@MainActivity).apply {
+                text = "파티 게임즈"
+                textSize = 26f
+                setTextColor(Color.WHITE)
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 16, 0, 4)
+            }
+            addView(splashTitle)
+
+            splashSubtitle = TextView(this@MainActivity).apply {
+                text = "친구들과 함께하는 파티 타임 ✨"
+                textSize = 14f
+                setTextColor(Color.parseColor("#a78bfa"))
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 0, 0, 36)
+            }
+            addView(splashSubtitle)
+
+            splashProgressBar = ProgressBar(this@MainActivity).apply {
+                indeterminateTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#f59e0b"))
+            }
+            addView(splashProgressBar)
+
+            splashStatusText = TextView(this@MainActivity).apply {
+                text = "서버에 연결하는 중… 🚀"
+                textSize = 13f
+                setTextColor(Color.parseColor("#94a3b8"))
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 20, 0, 0)
+            }
+            addView(splashStatusText)
+        }
+        root.addView(splashLayout)
+
         // 오프라인 / 서버 연결 실패 화면
         errorLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -307,6 +371,51 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         setContentView(root)
     }
 
+    private fun startSplashTimer() {
+        splashTimer?.cancel()
+        splashLayout.visibility = View.VISIBLE
+        splashLayout.alpha = 1f
+        splashStatusText.text = "서버에 연결하는 중… 🚀"
+
+        var elapsedSeconds = 0
+        splashTimer = object : CountDownTimer(50000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                elapsedSeconds++
+                when (elapsedSeconds) {
+                    in 1..3 -> {
+                        splashStatusText.text = "서버에 연결하는 중… 🚀"
+                    }
+                    in 4..12 -> {
+                        splashStatusText.text = "클라우드 서버를 깨우고 있어요 ☕\n(무료 서버 특성상 최초 접속 시 약 15초 소요)"
+                    }
+                    in 13..30 -> {
+                        splashStatusText.text = "서버가 활성화되었습니다! 🎮\n게임 리소스를 불러오는 중입니다 ✨"
+                    }
+                    else -> {
+                        splashStatusText.text = "네트워크 상태를 확인하고 있습니다… ⏳"
+                    }
+                }
+            }
+
+            override fun onFinish() {
+                if (splashLayout.visibility == View.VISIBLE) {
+                    showError("서버 응답 시간 초과 (50초)")
+                }
+            }
+        }.start()
+    }
+
+    private fun dismissSplash() {
+        splashTimer?.cancel()
+        if (splashLayout.visibility == View.VISIBLE) {
+            splashLayout.animate()
+                .alpha(0f)
+                .setDuration(400)
+                .withEndAction { splashLayout.visibility = View.GONE }
+                .start()
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         val s = webView.settings
@@ -341,6 +450,7 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 injectHostAppFlags()
+                dismissSplash()
             }
 
             override fun onReceivedError(
@@ -349,6 +459,8 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
                 error: WebResourceError?
             ) {
                 if (request?.isForMainFrame == true) {
+                    splashTimer?.cancel()
+                    splashLayout.visibility = View.GONE
                     showError(error?.description?.toString() ?: "연결 오류")
                 }
             }
@@ -371,12 +483,13 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         val url = prefs.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL) ?: DEFAULT_SERVER_URL
         errorLayout.visibility = View.GONE
         webView.visibility = View.VISIBLE
+        startSplashTimer()
         webView.loadUrl(url)
     }
 
     private fun showError(detail: String) {
         val currentUrl = prefs.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL)
-        errorMsg.text = "접속 주소: $currentUrl\n오류 내용: $detail\n\nPC에서 node server/index.js가 실행 중인지 확인해주세요."
+        errorMsg.text = "접속 주소: $currentUrl\n오류 내용: $detail\n\n클라우드 서버 상태를 확인해주세요."
         errorLayout.visibility = View.VISIBLE
         webView.visibility = View.GONE
     }
@@ -385,13 +498,13 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         val currentUrl = prefs.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL)
         val input = EditText(this).apply {
             setText(currentUrl)
-            hint = "예: http://10.0.2.2:3000 또는 http://192.168.0.5:3000"
+            hint = "예: https://party-games-cxo2.onrender.com"
             setSelection(text.length)
         }
 
         AlertDialog.Builder(this)
             .setTitle("게임 서버 주소 설정")
-            .setMessage("에뮬레이터: http://10.0.2.2:3000\n실제 스마트폰(같은 Wi-Fi): http://내PC의IP:3000\n클라우드: https://내도메인")
+            .setMessage("기본 클라우드 주소:\nhttps://party-games-cxo2.onrender.com")
             .setView(input)
             .setPositiveButton("저장 및 접속") { _, _ ->
                 val newUrl = input.text.toString().trim()
@@ -468,7 +581,6 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         fun requestInAppPurchase(productId: String) {
             runOnUiThread {
                 Toast.makeText(context, "구글 플레이 결제창 연결 중… ($productId)", Toast.LENGTH_SHORT).show()
-                // 실제 출시 시 queryProductDetails & launchBillingFlow 수행. 테스트용으로 즉시 승인 시뮬레이션:
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle("👑 프리미엄 멤버십 구독 (테스트)")
                     .setMessage("월 2,900원 결제를 진행하시겠습니까?\n(테스트 환경에서는 즉시 VIP가 적용됩니다)")
