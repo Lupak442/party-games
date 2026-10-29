@@ -3,19 +3,29 @@ plugins {
 }
 
 android {
-  namespace = "com.partygames.host"
+  namespace = "com.partygamesapp"
   compileSdk = 36
   defaultConfig {
-    applicationId = "com.partygames.host"
+    applicationId = "com.partygamesapp"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
   }
 
+  signingConfigs {
+    create("release") {
+      storeFile = file("partygames-release.jks")
+      storePassword = "partygames1234!"
+      keyAlias = "partygames"
+      keyPassword = "partygames1234!"
+    }
+  }
+
   buildTypes {
     release {
       isMinifyEnabled = false
+      signingConfig = signingConfigs.getByName("release")
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }

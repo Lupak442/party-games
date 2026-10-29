@@ -1,4 +1,4 @@
-package com.partygames.host
+package com.partygamesapp
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
