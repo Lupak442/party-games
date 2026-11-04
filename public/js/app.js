@@ -286,6 +286,15 @@ const Local = {
       Local.closeAd();
     });
   },
+  startYacht() {
+    S.soloGame = 'yacht';
+    if (window.YachtGame) window.YachtGame.init();
+    renderRoom();
+  },
+  exitYacht() {
+    S.soloGame = null;
+    renderRoom();
+  },
 };
 
 /* ---- 방 렌더 ---- */
@@ -302,10 +311,19 @@ function renderRoom() {
   const st = S.state; if (!st) return;
   show('#landing', false); show('#room', true);
   $('#roomCode').textContent = st.room.code;
+
+  // 방장이 새로운 파티 게임을 시작하면 진행 중이던 솔로 게임 자동 종료 후 합류
+  if (st.room.gameId) {
+    S.soloGame = null;
+  }
+
   const m = me(), ri = rankInfo(), isHost = st.me === st.room.hostId;
   const isBabo = st.room.babo && st.room.babo.playerId === m.id;
   const isPrem = !!st.room.isPremium;
-  $('#meChip').innerHTML = `${isPrem ? '<span class="prem-chip-crown" title="프리미엄 혜택 활성화 중">👑VIP</span> ' : ''}${isHost ? '👑 ' : ''}${esc(m.name)}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
+  const isYachtKing = !!m.isYachtKing;
+  const crestHtml = isYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 다이스 1위 주사위 휘장 (최고 기록: ' + (m.yachtScore || 0) + '점)">🎲👑</span>' : '';
+
+  $('#meChip').innerHTML = `${isPrem ? '<span class="prem-chip-crown" title="프리미엄 혜택 활성화 중">👑VIP</span> ' : ''}${isHost ? '👑 ' : ''}${esc(m.name)}${crestHtml}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
   ['game', 'rank', 'people'].forEach((t) => $('#tab-' + t).classList.toggle('on', S.tab === t));
   const html = S.tab === 'game' ? gameTab() : S.tab === 'rank' ? rankTab() : peopleTab();
   morph($('#roomBody'), html);
@@ -318,14 +336,37 @@ function renderRoom() {
 
 function gameTab() {
   const st = S.state, isHost = st.me === st.room.hostId;
+  if (!st.room.gameId && S.soloGame === 'yacht') {
+    return window.YachtGame ? window.YachtGame.render({ me: st.me, room: st.room, isHost }) : '<div class="glass">요트 다이스를 로드할 수 없습니다.</div>';
+  }
   if (!st.room.gameId) {
     const n = st.room.players.length;
+    const roomLeader = st.room.yachtLeader;
     return `<div class="stack">
       <div class="row-between">
         <h2 class="sec" style="margin:0;">${isHost ? '어떤 게임을 할까요?' : '방장이 게임을 고르는 중…'}</h2>
-        ${st.room.isPremium ? '<span class="badge gold">👑 프리미엄 방</span>' : '<span class="badge muted">무료 방 (게임 변경 시 광고)</span>'}
+        ${st.room.isPremium ? '<span class="badge gold">👑 프리미엄 방</span>' : '<span class="badge muted">무료 방</span>'}
       </div>
-      ${isHost ? '' : '<div class="glass pulse-box">⏳ 잠시만 기다려주세요</div>'}
+
+      <!-- 🎲 1인 솔로 요트 다이스 플레이 배너 (누구나 대기 중 플레이 가능) -->
+      <div class="solo-game-banner glass" onclick="Local.startYacht()">
+        <div class="solo-banner-left">
+          <span class="solo-icon">🎲</span>
+          <div class="solo-banner-texts">
+            <div class="solo-title-row">
+              <b>1인용 요트 다이스</b>
+              <span class="solo-pill">대기 중 혼자 놀기</span>
+            </div>
+            <p class="muted">13라운드 주사위 족보를 완성하고 방 최고 기록을 달성하여 <b>[🎲👑 주사위 휘장]</b>을 차지하세요!</p>
+            <div class="solo-record-row">
+              <span class="solo-leader-badge">🏆 방 1위: <b>${roomLeader ? `${esc(roomLeader.name)} (${roomLeader.score}점)` : '도전자 대기 중'}</b></span>
+            </div>
+          </div>
+        </div>
+        <button class="btn primary sm solo-play-btn">플레이 ▶</button>
+      </div>
+
+      ${isHost ? '' : '<div class="glass pulse-box">⏳ 방장이 파티 게임을 시작하면 자동으로 합류합니다</div>'}
       <div class="game-grid">${st.catalog.map((g) => `
         <button class="game-card ${isHost ? '' : 'dim'}" ${isHost ? `data-local="selectGame" data-v="${g.id}"` : 'disabled'}>
           <span class="gi">${g.icon}</span><b>${esc(g.name)}</b><small>${esc(g.desc)}</small>
@@ -370,6 +411,7 @@ function rankTab() {
     }
     const isPlayerBabo = babo && babo.playerId === p.id;
     if (isPlayerBabo) cls += ' is-babo';
+    const isPlayerYachtKing = !!p.isYachtKing;
     const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[rk];
     return `<div class="rrow ${cls} ${p.id === st.me ? 'me' : ''}" data-key="${p.id}" style="transform:translateY(${idx * ROW}px)">
       <div class="rpos">${cls.startsWith('r') && !ri.allSame ? medal : rk}</div>
@@ -377,6 +419,7 @@ function rankTab() {
       <div class="rname">
         <span class="name-text">${esc(p.name)}</span>
         ${p.id === st.room.hostId ? ' <span title="방장">👑</span>' : ''}
+        ${isPlayerYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 1등 주사위 휘장">🎲👑</span>' : ''}
         ${isPrem && rk <= 3 && !ri.allSame ? ' <span class="badge-vip-glow">VIP</span>' : ''}
         ${isPlayerBabo ? ' <span class="r-babo-tag" title="바퀴벌레 바보">🪳🤪</span>' : ''}
         ${p.online ? '' : ' <small class="off">오프라인</small>'}
@@ -407,11 +450,12 @@ function peopleTab() {
   const st = S.state, isHost = st.me === st.room.hostId, r = st.room, babo = r.babo;
   const list = [...r.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => {
     const isPlayerBabo = babo && babo.playerId === p.id;
+    const isPlayerYachtKing = !!p.isYachtKing;
     return `
     <div class="prow ${isPlayerBabo ? 'is-babo-row' : ''}">
       ${avatar(p.name, p.id)}
-      <div class="pinfo"><b>${esc(p.name)}${p.id === r.hostId ? ' 👑' : ''}${isPlayerBabo ? ' <span class="p-babo-tag">🪳🤪 바보</span>' : ''}${p.id === st.me ? ' <small>(나)</small>' : ''}</b>
-        <small class="${p.online ? 'on' : 'off'}">● ${p.online ? '접속 중' : '오프라인 (자리 유지 중)'} · ${p.score}점</small></div>
+      <div class="pinfo"><b>${esc(p.name)}${p.id === r.hostId ? ' 👑' : ''}${isPlayerYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 1등 주사위 휘장">🎲👑</span>' : ''}${isPlayerBabo ? ' <span class="p-babo-tag">🪳🤪 바보</span>' : ''}${p.id === st.me ? ' <small>(나)</small>' : ''}</b>
+        <small class="${p.online ? 'on' : 'off'}">● ${p.online ? '접속 중' : '오프라인 (자리 유지 중)'} · ${p.score}점 ${p.yachtScore > 0 ? `· 🎲요트 ${p.yachtScore}점` : ''}</small></div>
       ${isHost && p.id !== st.me ? `<div class="pact">
         <button class="mini" data-send="room.score" ${pl({ id: p.id, delta: -5 })}>-5</button>
         <button class="mini" data-send="room.score" ${pl({ id: p.id, delta: 5 })}>+5</button>

@@ -75,7 +75,16 @@ function viewFor(room, p) {
       gameId: room.game ? room.game.id : null,
       isPremium: !!room.isPremium,
       babo: room.babo || null,
-      players: room.players.map((x) => ({ id: x.id, name: x.name, score: x.score, joinedAt: x.joinedAt, online: isOnline(room, x.id) })),
+      yachtLeader: room.yachtLeader || null,
+      players: room.players.map((x) => ({
+        id: x.id,
+        name: x.name,
+        score: x.score,
+        joinedAt: x.joinedAt,
+        online: isOnline(room, x.id),
+        yachtScore: x.yachtScore || 0,
+        isYachtKing: !!(room.yachtLeader && room.yachtLeader.pid === x.id && (room.yachtLeader.score || 0) > 0),
+      })),
     },
     meta: {
       hasAi: ai.hasAiKey(),
@@ -196,6 +205,29 @@ function roomAction(room, p, type, pl) {
       const n = cleanName(pl.name); if (!n) throw fail('이름을 입력해주세요');
       if (room.players.some((x) => x.id !== p.id && x.name === n)) throw fail('이미 있는 이름이에요');
       p.name = n; return;
+    }
+    case 'submitYachtScore': {
+      const score = Math.max(0, Math.min(500, Math.round(Number(pl.score)) || 0));
+      if (!p.yachtScore || score > p.yachtScore) {
+        p.yachtScore = score;
+      }
+      let maxScore = 0;
+      let leader = null;
+      for (const pl of room.players) {
+        if ((pl.yachtScore || 0) > maxScore) {
+          maxScore = pl.yachtScore;
+          leader = { pid: pl.id, name: pl.name, score: maxScore };
+        }
+      }
+      const prevLeaderPid = room.yachtLeader?.pid;
+      room.yachtLeader = leader;
+      if (leader && leader.pid === p.id && leader.pid !== prevLeaderPid) {
+        emitAll(room, 'toast', {
+          msg: `🎲👑 ${p.name}님이 요트 ${score}점으로 방 내 1등 휘장을 획득했어요!`,
+          kind: 'info',
+        });
+      }
+      return;
     }
     default: throw fail('알 수 없는 요청이에요');
   }
