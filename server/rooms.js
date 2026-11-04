@@ -50,6 +50,7 @@ function load() {
     const arr = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
     for (const r of arr) {
       if (Date.now() - (r.updatedAt || 0) > ROOM_TTL_MS) continue;
+      r.isPremium = true;
       rooms.set(r.code, r);
     }
   } catch (e) { /* 없으면 무시 */ }
@@ -73,7 +74,7 @@ function viewFor(room, p) {
       maxPlayers: room.maxPlayers,
       hostId: room.hostId,
       gameId: room.game ? room.game.id : null,
-      isPremium: !!room.isPremium,
+      isPremium: true,
       babo: room.babo || null,
       yachtLeader: room.yachtLeader || null,
       players: room.players.map((x) => ({
@@ -253,7 +254,7 @@ function attach(socket) {
       maxPlayers: max, 
       hostId: p.id, 
       hostAwaySince: null, 
-      isPremium: !!d.isPremium,
+      isPremium: true,
       players: [p], 
       game: null, 
       usedWords: [] 

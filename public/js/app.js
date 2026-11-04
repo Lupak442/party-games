@@ -142,9 +142,6 @@ function previewRoom() {
   });
 }
 
-let pendingGameId = null;
-let adTimerInterval = null;
-let adSecondsLeft = 5;
 
 const Local = {
   seg(el) {
@@ -218,73 +215,8 @@ const Local = {
   selectGame(el) {
     const st = S.state; if (!st || st.me !== st.room.hostId) return;
     const gameId = el.dataset.v; if (!gameId) return;
-    if (st.room.isPremium) {
-      act('room.selectGame', { id: gameId });
-      return;
-    }
-    // 안드로이드 앱인 경우 네이티브 AdMob 전면 광고 호출
-    if (window.AndroidBridge && typeof window.AndroidBridge.showNativeAd === 'function') {
-      pendingGameId = gameId;
-      window.AndroidBridge.showNativeAd();
-      return;
-    }
-    // 일반 웹 브라우저 접속 시 5초 웹 광고 모달 표시
-    Local.showAd(gameId);
-  },
-  onNativeAdComplete() {
-    if (pendingGameId) {
-      act('room.selectGame', { id: pendingGameId });
-      pendingGameId = null;
-    }
-  },
-  onNativePurchaseSuccess(productId) {
-    act('room.setPremium', { isPremium: true }).then(() => {
-      toast('👑 프리미엄 멤버십이 적용되었습니다! 광고가 영구 제거되었습니다.', 'ok');
-      Local.closeAd();
-    });
-  },
-  showAd(gameId) {
-    pendingGameId = gameId;
-    adSecondsLeft = 5;
-    show('#adModal', true);
-    $('#adCloseBtn').disabled = true;
-    $('#adTimer').textContent = `${adSecondsLeft}초 후 건너뛰기`;
-    $('#adProgress').style.width = '0%';
-
-    clearInterval(adTimerInterval);
-    const start = Date.now();
-    adTimerInterval = setInterval(() => {
-      const elapsed = (Date.now() - start) / 1000;
-      const pct = Math.min(100, (elapsed / 5) * 100);
-      $('#adProgress').style.width = pct + '%';
-      adSecondsLeft = Math.max(0, Math.ceil(5 - elapsed));
-      if (adSecondsLeft > 0) {
-        $('#adTimer').textContent = `${adSecondsLeft}초 후 건너뛰기`;
-      } else {
-        clearInterval(adTimerInterval);
-        $('#adCloseBtn').disabled = false;
-        $('#adTimer').textContent = '✕ 닫고 게임 시작';
-      }
-    }, 100);
-  },
-  closeAd() {
-    clearInterval(adTimerInterval);
-    show('#adModal', false);
-    if (pendingGameId) {
-      act('room.selectGame', { id: pendingGameId });
-      pendingGameId = null;
-    }
-  },
-  buyPremium() {
-    if (window.AndroidBridge && typeof window.AndroidBridge.requestInAppPurchase === 'function') {
-      window.AndroidBridge.requestInAppPurchase('premium_monthly');
-      return;
-    }
-    if (!confirm('👑 파티 게임즈 프리미엄 멤버십에 가입하시겠습니까?\n\n- 모든 게임 광고 제거 (0초 즉시 시작)\n- 랭킹 VIP 네온 골드 오로라 효과\n- 포인트 증감 파티클 연출\n- 스피드 퀴즈 팀장 직접 출제 등 특별 룰 해금')) return;
-    act('room.setPremium', { isPremium: true }).then(() => {
-      toast('👑 프리미엄 멤버십이 적용되었습니다! 광고가 제거되었습니다.', 'ok');
-      Local.closeAd();
-    });
+    // 모든 유저 0초 즉시 시작 (광고 및 인앱결제 완전 무료 개방)
+    act('room.selectGame', { id: gameId });
   },
   startYacht() {
     S.soloGame = 'yacht';
@@ -345,7 +277,7 @@ function gameTab() {
     return `<div class="stack">
       <div class="row-between">
         <h2 class="sec" style="margin:0;">${isHost ? '어떤 게임을 할까요?' : '방장이 게임을 고르는 중…'}</h2>
-        ${st.room.isPremium ? '<span class="badge gold">👑 프리미엄 방</span>' : '<span class="badge muted">무료 방</span>'}
+        <span class="badge gold">👑 모든 혜택 무료 개방</span>
       </div>
 
       <!-- 🎲 1인 솔로 요트 다이스 플레이 배너 (누구나 대기 중 플레이 가능) -->
@@ -373,7 +305,7 @@ function gameTab() {
           <em>${g.minPlayers}명~ ${n < g.minPlayers ? '· 인원 부족' : ''}</em>
         </button>`).join('')}
       </div>
-      <p class="hint">${isHost && !st.room.isPremium ? '💡 프리미엄 방장은 게임 선택 시 광고 없이 0초 만에 바로 시작할 수 있어요 ✨' : '새로운 게임은 앞으로 계속 추가돼요 ✨'}</p>
+      <p class="hint">모든 게임 광고 없이 0초 즉시 시작 · 새로운 게임은 앞으로 계속 추가돼요 ✨</p>
     </div>`;
   }
   const meta = st.catalog.find((g) => g.id === st.room.gameId);
@@ -434,13 +366,9 @@ function rankTab() {
   return `<div class="stack">
     <div class="row-between">
       <h2 class="sec" style="margin:0;">🏆 실시간 랭킹</h2>
-      ${isHost ? `
-        <button class="btn sm ${isPrem ? 'gold' : 'ghost'}" data-send="room.setPremium" ${pl({ isPremium: !isPrem })}>
-          ${isPrem ? '👑 VIP 활성화 중' : '👑 프리미엄 혜택 활성화'}
-        </button>
-      ` : isPrem ? '<span class="badge gold">👑 VIP 프리미엄 방</span>' : ''}
+      <span class="badge gold">👑 VIP 프리미엄 혜택 기본 적용</span>
     </div>
-    ${isPrem ? '<div class="prem-status-banner">✨ <b>프리미엄 VIP 혜택 적용 중</b>: 랭킹 네온 오로라 효과 & 포인트 증감 연출 활성화!</div>' : ''}
+    <div class="prem-status-banner">✨ <b>전원 VIP 혜택 적용</b>: 랭킹 네온 오로라 효과 & 포인트 증감 파티클 연출 활성화!</div>
     <div class="board" style="height:${n * ROW}px">${rows}</div>
     ${isHost ? '<p class="hint">방장은 − / + 버튼으로 점수를 바로 조절할 수 있어요</p>' : ''}
   </div>`;

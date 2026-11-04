@@ -70,39 +70,16 @@
         <label class="field"><span>최대 인원 <b id="maxVal">8</b>명</span>
           <input id="inMax" type="range" min="2" max="30" value="8" />
         </label>
-        <label class="field-check glass" style="margin:8px 0 14px 0; padding:10px 12px; border-radius:10px; cursor:pointer;">
-          <input type="checkbox" id="inPremium" checked />
-          <span><b>👑 프리미엄 혜택 활성화</b> <small class="muted block">특별 룰 해금(스피드 퀴즈 팀장 직접 출제 등) · 랭킹 네온 효과 · 광고 면제</small></span>
-        </label>
+        <div class="field-check glass" style="margin:8px 0 14px 0; padding:12px 14px; border-radius:14px; background:#f0fdf4; border:1.5px solid #a7f3d0;">
+          <input type="checkbox" id="inPremium" checked disabled style="display:none;" />
+          <span><b style="color:#065f46;">👑 모든 기능 & VIP 혜택 전원 무료</b> <small class="muted block" style="color:#047857; margin-top:2px;">광고 없음 · 0초 즉시 시작 · 스피드 퀴즈 팀 대표 직접 출제 · VIP 랭킹 오로라 효과 전원 적용!</small></span>
+        </div>
         <button id="btnCreate" class="btn primary block" data-local="create">방 만들고 방장 되기 👑</button>
       </div>
       <p id="landErr" class="err" hidden></p>
     </section>
   </main>
 
-  <!-- 전면 광고 모달 (무료 방장이 다른 게임 선택 시) -->
-  <div id="adModal" class="ad-modal" hidden>
-    <div class="ad-card glass">
-      <div class="ad-head">
-        <span class="ad-badge">스폰서 광고 [AD]</span>
-        <button id="adCloseBtn" class="btn ghost sm" disabled onclick="Local.closeAd()">
-          <span id="adTimer">5초 후 건너뛰기</span>
-        </button>
-      </div>
-      <div class="ad-body">
-        <div class="ad-sponsor-art">
-          <div class="sponsor-emoji">🎉🍔✈️</div>
-          <h2>파티 게임즈 x 특별 스폰서</h2>
-          <p class="muted">친구들과 함께하는 최고의 파티 타임!</p>
-          <div class="ad-progress-bar"><div id="adProgress" class="ad-progress-fill"></div></div>
-        </div>
-      </div>
-      <div class="ad-footer">
-        <div class="ad-vip-tip">👑 <b>프리미엄 구독자</b>는 모든 광고가 0초 만에 스킵됩니다!</div>
-        <button class="btn gold sm" onclick="Local.buyPremium()">프리미엄 멤버십 가입</button>
-      </div>
-    </div>
-  </div>
 
   <!-- 방 -->
   <div id="room" class="room" hidden>

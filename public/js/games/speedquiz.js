@@ -45,15 +45,15 @@ GameUI.speedquiz = {
     <div class="glass" id="sqForm">
       <div class="row-between">
         <h3 style="margin:0;">설정</h3>
-        ${isPremium ? '<span class="badge gold">👑 프리미엄 혜택 활성화</span>' : '<span class="badge muted">무료 방</span>'}
+        <span class="badge gold">👑 모든 혜택 활성화</span>
       </div>
       ${G.error ? `<p class="err">${esc(G.error)}</p>` : ''}
       <label class="field"><span>문제 출처</span>
         <select name="source" data-change-send="game.settings" data-collect="#sqForm">
           <option value="builtin" ${s.source === 'builtin' ? 'selected' : ''}>📚 내장 주제에서 출제 (추천)</option>
           <option value="ai" ${s.source === 'ai' ? 'selected' : ''}>🤖 AI가 주제에 맞게 자동 생성</option>
-          <option value="custom" ${s.source === 'custom' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>
-            ✍️ 팀 대표 직접 입력 ${!isPremium ? '🔒 (프리미엄 전용)' : '👑'}
+          <option value="custom" ${s.source === 'custom' ? 'selected' : ''}>
+            ✍️ 팀 대표 직접 입력 👑
           </option>
         </select>
       </label>

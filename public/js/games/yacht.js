@@ -388,3 +388,4 @@ window.YachtGame = (function() {
     render,
   };
 })();
+
