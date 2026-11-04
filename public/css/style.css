@@ -276,6 +276,106 @@ button.chip:hover { background: rgba(255,255,255,.2); }
 
 /* 블랙잭 게임 스타일 */
 .bj-container { animation: rise .35s both; }
+
+/* Pixi.js 아케이드 테이블 뷰 */
+.bj-table-outer {
+  position: relative;
+  width: 100%;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 35px rgba(251,191,36,.15);
+  margin-bottom: 12px;
+  background: #064e3b;
+}
+.bj-pixi-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.bj-pixi-canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* 테이블 HUD 오버레이 */
+.bj-table-hud {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+.hud-dealer {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 14px;
+  border-radius: 14px;
+  background: rgba(10, 10, 28, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(251,191,36,0.4);
+  font-size: .85rem;
+  font-weight: 800;
+  color: #fde68a;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+.hud-dealer small { font-size: .75rem; color: #94a3b8; }
+.hud-player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 6px 16px;
+  border-radius: 14px;
+  background: rgba(10, 10, 28, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(52,211,153,0.5);
+  font-size: .85rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+.hud-player b { font-size: 1.25rem; font-weight: 900; color: #34d399; }
+.hud-player b.bj-txt {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: bounce 1.2s infinite;
+}
+.hud-player b.bust-txt { color: #f43f5e; }
+
+/* 아케이드 액션 버튼 (히트 & 스탠드) */
+.btn-arcade-hit {
+  background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+  box-shadow: 0 6px 0 #1d4ed8, 0 12px 24px rgba(37,99,235,0.45) !important;
+  border: 1px solid #60a5fa !important;
+  font-weight: 900 !important;
+  font-size: 1.15rem !important;
+  transition: transform .1s, box-shadow .1s !important;
+}
+.btn-arcade-hit:active {
+  transform: translateY(4px) !important;
+  box-shadow: 0 2px 0 #1d4ed8, 0 4px 10px rgba(37,99,235,0.4) !important;
+}
+
+.btn-arcade-stand {
+  background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+  box-shadow: 0 6px 0 #b91c1c, 0 12px 24px rgba(220,38,38,0.45) !important;
+  border: 1px solid #f87171 !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  font-size: 1.15rem !important;
+  transition: transform .1s, box-shadow .1s !important;
+}
+.btn-arcade-stand:active {
+  transform: translateY(4px) !important;
+  box-shadow: 0 2px 0 #b91c1c, 0 4px 10px rgba(220,38,38,0.4) !important;
+}
+
 .bj-table { position: relative; overflow: hidden; }
 .dealer-box { background: linear-gradient(145deg, rgba(16,70,45,.4), rgba(6,40,25,.3)); border-color: rgba(52,211,153,.35); }
 .my-box { background: linear-gradient(145deg, rgba(30,27,75,.5), rgba(49,46,129,.4)); border-color: rgba(139,92,246,.4); }
