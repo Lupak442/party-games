@@ -1,12 +1,13 @@
 package com.partygamesapp
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
@@ -25,24 +26,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import android.app.AlertDialog
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.android.billingclient.api.AcknowledgePurchaseParams
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.PendingPurchasesParams
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 
-class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
+class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
@@ -62,13 +50,6 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
     private lateinit var btnSettings: Button
     private lateinit var prefs: SharedPreferences
 
-    // Google AdMob
-    private var interstitialAd: InterstitialAd? = null
-    private var isLoadingAd: Boolean = false
-
-    // Google Play Billing
-    private lateinit var billingClient: BillingClient
-
     private var backPressedTime: Long = 0
 
     companion object {
@@ -76,8 +57,6 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         private const val KEY_SERVER_URL = "server_url"
         // Render 클라우드 공식 서버 주소
         const val DEFAULT_SERVER_URL = "https://party-games-cxo2.onrender.com"
-        // 구글 AdMob 공식 전면 테스트 광고 단위 ID
-        const val TEST_INTERSTITIAL_AD_ID = "ca-app-pub-3940256099942544/1033173712"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -86,156 +65,25 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
 
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-        // 게임의 다크 테마(#070514)에 맞춰 상태바 및 내비게이션바 색상 일체화
+        // 화사한 아케이드 테마(#f4f6fb)에 맞춘 상태바 & 내비게이션바
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        window.statusBarColor = Color.parseColor("#070514")
-        window.navigationBarColor = Color.parseColor("#070514")
+        window.statusBarColor = Color.parseColor("#f4f6fb")
+        window.navigationBarColor = Color.parseColor("#f4f6fb")
         val controller = WindowInsetsControllerCompat(window, window.decorView)
-        controller.isAppearanceLightStatusBars = false
-        controller.isAppearanceLightNavigationBars = false
+        controller.isAppearanceLightStatusBars = true
+        controller.isAppearanceLightNavigationBars = true
 
         setupUI()
         setupWebView()
         setupBackPress()
 
-        // 1. Google AdMob 초기화 & 첫 번째 광고 미리 로드
-        initAdMob()
-
-        // 2. Google Play Billing 초기화
-        initBilling()
-
         loadGameUrl()
     }
 
-    /* ---- 1. Google AdMob 초기화 및 전면 광고 로드 ---- */
-    private fun initAdMob() {
-        MobileAds.initialize(this) {
-            loadInterstitialAd()
-        }
-    }
-
-    private fun loadInterstitialAd() {
-        if (isLoadingAd || interstitialAd != null) return
-        isLoadingAd = true
-
-        val adRequest = AdRequest.Builder().build()
-        InterstitialAd.load(
-            this,
-            TEST_INTERSTITIAL_AD_ID,
-            adRequest,
-            object : InterstitialAdLoadCallback() {
-                override fun onAdLoaded(ad: InterstitialAd) {
-                    interstitialAd = ad
-                    isLoadingAd = false
-                    setupAdCallbacks()
-                }
-
-                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                    interstitialAd = null
-                    isLoadingAd = false
-                }
-            }
-        )
-    }
-
-    private fun setupAdCallbacks() {
-        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-                interstitialAd = null
-                notifyAdCompleted()
-                loadInterstitialAd() // 다음 판을 위해 미리 백그라운드 프리로드
-            }
-
-            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                interstitialAd = null
-                notifyAdCompleted()
-                loadInterstitialAd()
-            }
-        }
-    }
-
-    private fun showNativeAd() {
-        runOnUiThread {
-            if (interstitialAd != null) {
-                interstitialAd?.show(this)
-            } else {
-                // 광고가 아직 로드되지 않았거나 네트워크 지연 시 딜레이 없이 바로 게임 시작
-                notifyAdCompleted()
-                loadInterstitialAd()
-            }
-        }
-    }
-
-    private fun notifyAdCompleted() {
-        webView.evaluateJavascript(
-            "if (window.Local && typeof Local.onNativeAdComplete === 'function') { Local.onNativeAdComplete(); }",
-            null
-        )
-    }
-
-    /* ---- 2. Google Play Billing 초기화 및 인앱결제 처리 ---- */
-    private fun initBilling() {
-        val pendingParams = PendingPurchasesParams.newBuilder()
-            .enableOneTimeProducts()
-            .build()
-
-        billingClient = BillingClient.newBuilder(this)
-            .setListener(this)
-            .enablePendingPurchases(pendingParams)
-            .build()
-
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                // Billing 연결 성공
-            }
-
-            override fun onBillingServiceDisconnected() {
-                // 필요 시 재연결
-            }
-        })
-    }
-
-    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
-                handlePurchase(purchase)
-            }
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
-            Toast.makeText(this, "결제가 취소되었습니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun handlePurchase(purchase: Purchase) {
-        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-            if (!purchase.isAcknowledged) {
-                val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
-                    .setPurchaseToken(purchase.purchaseToken)
-                    .build()
-                billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
-                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        notifyPurchaseSuccess()
-                    }
-                }
-            } else {
-                notifyPurchaseSuccess()
-            }
-        }
-    }
-
-    private fun notifyPurchaseSuccess() {
-        runOnUiThread {
-            Toast.makeText(this, "👑 프리미엄 멤버십이 활성화되었습니다!", Toast.LENGTH_LONG).show()
-            webView.evaluateJavascript(
-                "if (window.Local && typeof Local.onNativePurchaseSuccess === 'function') { Local.onNativePurchaseSuccess('premium_monthly'); }",
-                null
-            )
-        }
-    }
-
-    /* ---- 3. UI 및 웹뷰 세팅 ---- */
+    /* ---- 1. UI 및 웹뷰 세팅 ---- */
     private fun setupUI() {
         val root = android.widget.FrameLayout(this).apply {
-            setBackgroundColor(Color.parseColor("#070514"))
+            setBackgroundColor(Color.parseColor("#f4f6fb"))
         }
 
         webView = WebView(this).apply {
@@ -243,7 +91,7 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#070514"))
+            setBackgroundColor(Color.parseColor("#f4f6fb"))
         }
         root.addView(webView)
 
@@ -254,7 +102,7 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             )
             isIndeterminate = false
             max = 100
-            progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#f59e0b"))
+            progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#5b5bf7"))
             visibility = View.GONE
         }
         root.addView(progressBar)
@@ -264,14 +112,14 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
             setPadding(48, 48, 48, 48)
-            setBackgroundColor(Color.parseColor("#070514"))
+            setBackgroundColor(Color.parseColor("#f4f6fb"))
             layoutParams = android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT
             )
 
             val logo = TextView(this@MainActivity).apply {
-                text = "🎲👑"
+                text = "🎲"
                 textSize = 56f
                 gravity = android.view.Gravity.CENTER
             }
@@ -280,7 +128,7 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             splashTitle = TextView(this@MainActivity).apply {
                 text = "파티 게임즈"
                 textSize = 26f
-                setTextColor(Color.WHITE)
+                setTextColor(Color.parseColor("#191f28"))
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 16, 0, 4)
@@ -288,23 +136,23 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             addView(splashTitle)
 
             splashSubtitle = TextView(this@MainActivity).apply {
-                text = "친구들과 함께하는 파티 타임 ✨"
+                text = "친구들과 함께하는 실시간 파티 보드게임 ✨"
                 textSize = 14f
-                setTextColor(Color.parseColor("#a78bfa"))
+                setTextColor(Color.parseColor("#5b5bf7"))
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 0, 0, 36)
             }
             addView(splashSubtitle)
 
             splashProgressBar = ProgressBar(this@MainActivity).apply {
-                indeterminateTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#f59e0b"))
+                indeterminateTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#5b5bf7"))
             }
             addView(splashProgressBar)
 
             splashStatusText = TextView(this@MainActivity).apply {
                 text = "서버에 연결하는 중… 🚀"
                 textSize = 13f
-                setTextColor(Color.parseColor("#94a3b8"))
+                setTextColor(Color.parseColor("#6b7684"))
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 20, 0, 0)
             }
@@ -318,14 +166,14 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             gravity = android.view.Gravity.CENTER
             setPadding(48, 48, 48, 48)
             visibility = View.GONE
-            setBackgroundColor(Color.parseColor("#0d0b24"))
+            setBackgroundColor(Color.parseColor("#f4f6fb"))
             layoutParams = android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT
             )
 
             val icon = TextView(this@MainActivity).apply {
-                text = "👑🎲"
+                text = "📡❌"
                 textSize = 48f
                 gravity = android.view.Gravity.CENTER
             }
@@ -334,7 +182,7 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             val title = TextView(this@MainActivity).apply {
                 text = "파티 게임즈 서버 연결 실패"
                 textSize = 20f
-                setTextColor(Color.WHITE)
+                setTextColor(Color.parseColor("#191f28"))
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 24, 0, 8)
@@ -344,91 +192,57 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             errorMsg = TextView(this@MainActivity).apply {
                 text = "서버가 켜져 있는지 확인해주세요."
                 textSize = 14f
-                setTextColor(Color.parseColor("#94a3b8"))
+                setTextColor(Color.parseColor("#6b7684"))
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 0, 0, 32)
             }
             addView(errorMsg)
 
+            val btnLayout = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER
+            }
+
             btnRetry = Button(this@MainActivity).apply {
-                text = "다시 시도 🔄"
-                setBackgroundColor(Color.parseColor("#8b5cf6"))
+                text = "다시 시도"
+                setBackgroundColor(Color.parseColor("#5b5bf7"))
                 setTextColor(Color.WHITE)
                 setOnClickListener { loadGameUrl() }
             }
-            addView(btnRetry)
+            btnLayout.addView(btnRetry)
 
             btnSettings = Button(this@MainActivity).apply {
-                text = "서버 주소 변경 ⚙️"
-                setBackgroundColor(Color.parseColor("#1e1b4b"))
-                setTextColor(Color.parseColor("#fbbf24"))
+                text = "서버 주소 변경"
+                setBackgroundColor(Color.parseColor("#e2e8f0"))
+                setTextColor(Color.parseColor("#191f28"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { leftMargin = 24 }
                 setOnClickListener { showServerSettingsDialog() }
             }
-            addView(btnSettings)
+            btnLayout.addView(btnSettings)
+
+            addView(btnLayout)
         }
         root.addView(errorLayout)
 
         setContentView(root)
     }
 
-    private fun startSplashTimer() {
-        splashTimer?.cancel()
-        splashLayout.visibility = View.VISIBLE
-        splashLayout.alpha = 1f
-        splashStatusText.text = "서버에 연결하는 중… 🚀"
-
-        var elapsedSeconds = 0
-        splashTimer = object : CountDownTimer(50000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                elapsedSeconds++
-                when (elapsedSeconds) {
-                    in 1..3 -> {
-                        splashStatusText.text = "서버에 연결하는 중… 🚀"
-                    }
-                    in 4..12 -> {
-                        splashStatusText.text = "클라우드 서버를 깨우고 있어요 ☕\n(무료 서버 특성상 최초 접속 시 약 15초 소요)"
-                    }
-                    in 13..30 -> {
-                        splashStatusText.text = "서버가 활성화되었습니다! 🎮\n게임 리소스를 불러오는 중입니다 ✨"
-                    }
-                    else -> {
-                        splashStatusText.text = "네트워크 상태를 확인하고 있습니다… ⏳"
-                    }
-                }
-            }
-
-            override fun onFinish() {
-                if (splashLayout.visibility == View.VISIBLE) {
-                    showError("서버 응답 시간 초과 (50초)")
-                }
-            }
-        }.start()
-    }
-
-    private fun dismissSplash() {
-        splashTimer?.cancel()
-        if (splashLayout.visibility == View.VISIBLE) {
-            splashLayout.animate()
-                .alpha(0f)
-                .setDuration(400)
-                .withEndAction { splashLayout.visibility = View.GONE }
-                .start()
-        }
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
-        val s = webView.settings
-        s.javaScriptEnabled = true
-        s.domStorageEnabled = true
-        s.databaseEnabled = true
-        s.allowFileAccess = true
-        s.allowContentAccess = true
-        s.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        s.userAgentString = s.userAgentString + " PartyGamesHostApp/1.0"
-        s.mediaPlaybackRequiresUserGesture = false
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+            allowFileAccess = false
+            mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+        }
 
-        // 네이티브 브릿지 등록 (웹 JavaScript에서 window.AndroidBridge로 호출)
         webView.addJavascriptInterface(AndroidBridgeInterface(this), "AndroidBridge")
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -444,13 +258,15 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                errorLayout.visibility = View.GONE
+                super.onPageStarted(view, url, favicon)
                 injectHostAppFlags()
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
                 injectHostAppFlags()
-                dismissSplash()
+                cancelSplashTimer()
+                splashLayout.visibility = View.GONE
             }
 
             override fun onReceivedError(
@@ -458,13 +274,47 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
                 request: WebResourceRequest?,
                 error: WebResourceError?
             ) {
+                super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
-                    splashTimer?.cancel()
-                    splashLayout.visibility = View.GONE
+                    cancelSplashTimer()
                     showError(error?.description?.toString() ?: "연결 오류")
                 }
             }
         }
+    }
+
+    private fun startSplashTimer() {
+        cancelSplashTimer()
+        splashLayout.visibility = View.VISIBLE
+        splashStatusText.text = "서버에 연결하는 중… 🚀"
+
+        splashTimer = object : CountDownTimer(45000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val elapsed = 45 - (millisUntilFinished / 1000)
+                when {
+                    elapsed in 4..14 -> {
+                        splashStatusText.text = "클라우드 서버 깨우는 중… (${elapsed}초)\n(무료 서버 슬립 해제에 15~20초 소요됩니다)"
+                    }
+                    elapsed in 15..29 -> {
+                        splashStatusText.text = "거의 다 됐어요! 게임 리소스 준비 중… (${elapsed}초)"
+                    }
+                    elapsed >= 30 -> {
+                        splashStatusText.text = "네트워크 상태 확인 중… (${elapsed}초)"
+                    }
+                }
+            }
+
+            override fun onFinish() {
+                if (splashLayout.visibility == View.VISIBLE) {
+                    showError("서버 응답 시간 초과 (45초 경과)")
+                }
+            }
+        }.start()
+    }
+
+    private fun cancelSplashTimer() {
+        splashTimer?.cancel()
+        splashTimer = null
     }
 
     private fun injectHostAppFlags() {
@@ -543,7 +393,7 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
         fun isApp(): Boolean = true
 
         @JavascriptInterface
-        fun getVersion(): String = "1.0.0"
+        fun getVersion(): String = "1.0.3"
 
         @JavascriptInterface
         fun shareInvite(title: String, text: String, url: String) {
@@ -570,26 +420,14 @@ class MainActivity : ComponentActivity(), PurchasesUpdatedListener {
             }
         }
 
-        // 네이티브 구글 AdMob 전면 광고 요청
         @JavascriptInterface
         fun showNativeAd() {
-            this@MainActivity.showNativeAd()
+            // 결제 & 광고 없는 100% 무료 VIP 개방
         }
 
-        // 네이티브 구글 플레이 인앱결제 요청
         @JavascriptInterface
         fun requestInAppPurchase(productId: String) {
-            runOnUiThread {
-                Toast.makeText(context, "구글 플레이 결제창 연결 중… ($productId)", Toast.LENGTH_SHORT).show()
-                AlertDialog.Builder(this@MainActivity)
-                    .setTitle("👑 프리미엄 멤버십 구독 (테스트)")
-                    .setMessage("월 2,900원 결제를 진행하시겠습니까?\n(테스트 환경에서는 즉시 VIP가 적용됩니다)")
-                    .setPositiveButton("결제 완료") { _, _ ->
-                        notifyPurchaseSuccess()
-                    }
-                    .setNegativeButton("취소", null)
-                    .show()
-            }
+            // 결제 없는 100% 무료 VIP 개방
         }
 
         @JavascriptInterface

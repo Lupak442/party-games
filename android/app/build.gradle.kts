@@ -9,8 +9,8 @@ android {
     applicationId = "com.partygamesapp"
     minSdk = 24
     targetSdk = 36
-    versionCode = 3
-    versionName = "1.0.2"
+    versionCode = 4
+    versionName = "1.0.3"
   }
 
   signingConfigs {
@@ -58,11 +58,5 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
-
-  // Google AdMob (전면 광고)
-  implementation("com.google.android.gms:play-services-ads:23.6.0")
-
-  // Google Play Billing (인앱결제 / 정기구독)
-  implementation("com.android.billingclient:billing-ktx:8.0.0")
 }
 
