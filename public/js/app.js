@@ -148,15 +148,7 @@ const Local = {
     const create = el.dataset.v === 'create';
     $('#segJoin').classList.toggle('on', !create); $('#segCreate').classList.toggle('on', create);
     show('#formJoin', !create);
-    if (create) {
-      if (isAppHost()) {
-        show('#formCreate', true); show('#formAppOnly', false);
-      } else {
-        show('#formCreate', false); show('#formAppOnly', true);
-      }
-    } else {
-      show('#formCreate', false); show('#formAppOnly', false);
-    }
+    show('#formCreate', create);
     landErr('');
   },
   downloadApp() {
@@ -251,11 +243,10 @@ function renderRoom() {
 
   const m = me(), ri = rankInfo(), isHost = st.me === st.room.hostId;
   const isBabo = st.room.babo && st.room.babo.playerId === m.id;
-  const isPrem = !!st.room.isPremium;
   const isYachtKing = !!m.isYachtKing;
   const crestHtml = isYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 다이스 1위 주사위 휘장 (최고 기록: ' + (m.yachtScore || 0) + '점)">🎲👑</span>' : '';
 
-  $('#meChip').innerHTML = `${isPrem ? '<span class="prem-chip-crown" title="프리미엄 혜택 활성화 중">👑VIP</span> ' : ''}${isHost ? '👑 ' : ''}${esc(m.name)}${crestHtml}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
+  $('#meChip').innerHTML = `${isHost ? '👑 ' : ''}${esc(m.name)}${crestHtml}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
   ['game', 'rank', 'people'].forEach((t) => $('#tab-' + t).classList.toggle('on', S.tab === t));
   const html = S.tab === 'game' ? gameTab() : S.tab === 'rank' ? rankTab() : peopleTab();
   morph($('#roomBody'), html);
@@ -277,7 +268,7 @@ function gameTab() {
     return `<div class="stack">
       <div class="row-between">
         <h2 class="sec" style="margin:0;">${isHost ? '어떤 게임을 할까요?' : '방장이 게임을 고르는 중…'}</h2>
-        <span class="badge gold">👑 모든 혜택 무료 개방</span>
+        <span class="badge gold">🎮 실시간 파티</span>
       </div>
 
       <!-- 🎲 1인 솔로 요트 다이스 플레이 배너 (누구나 대기 중 플레이 가능) -->
@@ -328,32 +319,32 @@ function gameTab() {
 function rankTab() {
   const st = S.state, isHost = st.me === st.room.hostId, ri = rankInfo(), n = ri.sorted.length;
   const babo = st.room.babo;
-  const isPrem = !!st.room.isPremium;
   const rows = [...st.room.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => {
     const idx = ri.order.get(p.id), rk = ri.rank.get(p.id);
     let cls = '';
     if (!ri.allSame) {
       if (rk <= 3) cls = 'r' + rk;
       else if (idx >= n - 2) cls = 'low';
-      if (isPrem) {
-        if (rk === 1) cls += ' prem-rank-1';
-        else if (rk === 2) cls += ' prem-rank-2';
-        else if (rk === 3) cls += ' prem-rank-3';
-      }
     }
     const isPlayerBabo = babo && babo.playerId === p.id;
     if (isPlayerBabo) cls += ' is-babo';
     const isPlayerYachtKing = !!p.isYachtKing;
     const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[rk];
+    const rankCrest = !ri.allSame ? (
+      rk === 1 ? '<span class="badge-rank-crest rank-1-crest">👑 1위</span>' :
+      rk === 2 ? '<span class="badge-rank-crest rank-2-crest">🥈 2위</span>' :
+      rk === 3 ? '<span class="badge-rank-crest rank-3-crest">🥉 3위</span>' : ''
+    ) : '';
+
     return `<div class="rrow ${cls} ${p.id === st.me ? 'me' : ''}" data-key="${p.id}" style="transform:translateY(${idx * ROW}px)">
       <div class="rpos">${cls.startsWith('r') && !ri.allSame ? medal : rk}</div>
       ${avatar(p.name, p.id)}
       <div class="rname">
         <span class="name-text">${esc(p.name)}</span>
-        ${p.id === st.room.hostId ? ' <span title="방장">👑</span>' : ''}
-        ${isPlayerYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 1등 주사위 휘장">🎲👑</span>' : ''}
-        ${isPrem && rk <= 3 && !ri.allSame ? ' <span class="badge-vip-glow">VIP</span>' : ''}
-        ${isPlayerBabo ? ' <span class="r-babo-tag" title="바퀴벌레 바보">🪳🤪</span>' : ''}
+        ${p.id === st.room.hostId ? ' <span class="host-badge" title="방장">👑 방장</span>' : ''}
+        ${rankCrest}
+        ${isPlayerYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 1등 주사위 휘장">🎲👑 주사위 킹</span>' : ''}
+        ${isPlayerBabo ? ' <span class="r-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''}
         ${p.online ? '' : ' <small class="off">오프라인</small>'}
       </div>
       <div class="rscore">${p.score}</div>
@@ -365,10 +356,12 @@ function rankTab() {
 
   return `<div class="stack">
     <div class="row-between">
-      <h2 class="sec" style="margin:0;">🏆 실시간 랭킹</h2>
-      <span class="badge gold">👑 VIP 프리미엄 혜택 기본 적용</span>
+      <h2 class="sec" style="margin:0;">🏆 실시간 명예의 전당</h2>
+      <span class="badge gold">✨ 실시간 랭킹전</span>
     </div>
-    <div class="prem-status-banner">✨ <b>전원 VIP 혜택 적용</b>: 랭킹 네온 오로라 효과 & 포인트 증감 파티클 연출 활성화!</div>
+    <div class="rank-guide-banner">
+      🥇 1위 골드 오로라 · 🎲👑 요트 다이스 챔피언 휘장 · 🪳🤪 벌칙 훈장
+    </div>
     <div class="board" style="height:${n * ROW}px">${rows}</div>
     ${isHost ? '<p class="hint">방장은 − / + 버튼으로 점수를 바로 조절할 수 있어요</p>' : ''}
   </div>`;
