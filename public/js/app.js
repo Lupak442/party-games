@@ -94,13 +94,10 @@ function sparkleEffect() {
 }
 
 function isAppHost() {
+  // 실제 안드로이드 앱 웹뷰 환경인지 검증
   if (window.isPartyGamesApp || window.AndroidBridge) return true;
-  if (localStorage.getItem('pg_is_app') === '1') return true;
-  const p = new URLSearchParams(location.search);
-  if (p.get('app') === '1') {
-    localStorage.setItem('pg_is_app', '1');
-    return true;
-  }
+  // PC 로컬 개발/테스트 환경(localhost) 허용
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return true;
   return false;
 }
 
@@ -146,13 +143,21 @@ function previewRoom() {
 const Local = {
   seg(el) {
     const create = el.dataset.v === 'create';
-    $('#segJoin').classList.toggle('on', !create); $('#segCreate').classList.toggle('on', create);
+    $('#segJoin').classList.toggle('on', !create); 
+    $('#segCreate').classList.toggle('on', create);
     show('#formJoin', !create);
-    show('#formCreate', create);
+    if (create) {
+      const isApp = isAppHost();
+      show('#formCreate', isApp);
+      show('#formAppOnly', !isApp);
+    } else {
+      show('#formCreate', false);
+      show('#formAppOnly', false);
+    }
     landErr('');
   },
   downloadApp() {
-    location.href = '/download/partygames-host.apk';
+    window.open('https://play.google.com/store/apps/details?id=com.partygamesapp', '_blank');
   },
   toggleAppMode() {
     const cur = localStorage.getItem('pg_is_app') === '1';
@@ -162,15 +167,13 @@ const Local = {
   },
   claim(el) { $('#inName').value = el.dataset.v; },
   create() {
-    if (!isAppHost()) return landErr('방 만들기는 [파티 게임즈] 앱에서만 가능해요!');
+    if (!isAppHost()) return landErr('방 만들기는 [파티 게임즈] 앱에서만 가능해요! 구글 플레이에서 앱을 설치해주세요.');
     const name = $('#inName').value.trim(); if (!name) return landErr('이름을 입력해주세요');
-    const isPremium = $('#inPremium') ? $('#inPremium').checked : false;
     localStorage.setItem('pg_name', name);
     socket.emit('room:create', { 
       name, 
       maxPlayers: Number($('#inMax').value),
-      isApp: true,
-      isPremium 
+      isApp: isAppHost()
     }, (r) => {
       if (!r.ok) return landErr(r.error); saveSession({ code: r.code, token: r.token });
     });

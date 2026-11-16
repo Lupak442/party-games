@@ -51,12 +51,27 @@
         <button id="btnJoin" class="btn primary block" data-local="join">입장하기</button>
       </div>
 
-      <!-- 2. 방 만들기 폼 -->
+      <!-- 2. 방 만들기 폼 (앱 전용) -->
       <div id="formCreate" hidden>
         <label class="field"><span>최대 인원 <b id="maxVal">8</b>명</span>
           <input id="inMax" type="range" min="2" max="30" value="8" />
         </label>
         <button id="btnCreate" class="btn primary block" data-local="create">방 만들기 👑</button>
+      </div>
+
+      <!-- 3. 웹 접속자용 앱 설치 유도 카드 -->
+      <div id="formAppOnly" hidden>
+        <div class="glass center" style="padding:20px 14px; background:linear-gradient(135deg, rgba(254,243,199,0.7), rgba(253,230,138,0.35)); border:1.5px solid rgba(245,158,11,0.5);">
+          <div style="font-size:2.8rem; margin-bottom:6px;">👑📱</div>
+          <h3 style="margin:4px 0 6px 0; color:#92400e; font-size:1.15rem;">방 만들기는 앱 전용 기능이에요!</h3>
+          <p class="muted" style="font-size:0.88rem; line-height:1.5; margin:0 0 14px 0;">
+            초대 링크를 받으신 분은 <b>'방 참가'</b>에서 바로 게임을 즐기실 수 있어요.<br/>
+            직접 방을 만들고 친구들을 모으시려면 <b>[파티 게임즈 앱]</b>을 무료로 다운로드해주세요!
+          </p>
+          <a href="https://play.google.com/store/apps/details?id=com.partygamesapp" target="_blank" class="btn primary block" style="font-size:1rem; padding:12px; text-decoration:none; display:block;">
+            📲 Google Play에서 무료 앱 다운받기
+          </a>
+        </div>
       </div>
       <p id="landErr" class="err" hidden></p>
     </section>
