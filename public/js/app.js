@@ -244,9 +244,9 @@ function renderRoom() {
   const m = me(), ri = rankInfo(), isHost = st.me === st.room.hostId;
   const isBabo = st.room.babo && st.room.babo.playerId === m.id;
   const isYachtKing = !!m.isYachtKing;
-  const crestHtml = isYachtKing ? ' <span class="yacht-king-crest" title="방 내 요트 다이스 1위 주사위 휘장 (최고 기록: ' + (m.yachtScore || 0) + '점)">🎲👑</span>' : '';
+  const crestHtml = isYachtKing ? ' <span class="yacht-king-crest" title="방 내 행운의 주사위 1위 휘장 (최고 기록: ' + (m.yachtScore || 0) + '점)">🎲👑</span>' : '';
 
-  $('#meChip').innerHTML = `${isHost ? '👑 ' : ''}${esc(m.name)}${crestHtml}${isBabo ? ' <span class="me-babo-tag" title="바퀴벌레 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
+  $('#meChip').innerHTML = `${isHost ? '👑 ' : ''}${esc(m.name)}${crestHtml}${isBabo ? ' <span class="me-babo-tag" title="벌레 거짓말 꼴찌 바보">🪳🤪 바보</span>' : ''} <b>${m.score}점</b> · ${ri.rank.get(m.id)}위`;
   ['game', 'rank', 'people'].forEach((t) => $('#tab-' + t).classList.toggle('on', S.tab === t));
   const html = S.tab === 'game' ? gameTab() : S.tab === 'rank' ? rankTab() : peopleTab();
   morph($('#roomBody'), html);
@@ -260,7 +260,7 @@ function renderRoom() {
 function gameTab() {
   const st = S.state, isHost = st.me === st.room.hostId;
   if (!st.room.gameId && S.soloGame === 'yacht') {
-    return window.YachtGame ? window.YachtGame.render({ me: st.me, room: st.room, isHost }) : '<div class="glass">요트 다이스를 로드할 수 없습니다.</div>';
+    return window.YachtGame ? window.YachtGame.render({ me: st.me, room: st.room, isHost }) : '<div class="glass">행운의 주사위를 로드할 수 없습니다.</div>';
   }
   if (!st.room.gameId) {
     const n = st.room.players.length;
@@ -271,13 +271,13 @@ function gameTab() {
         <span class="badge gold">🎮 실시간 파티</span>
       </div>
 
-      <!-- 🎲 1인 솔로 요트 다이스 플레이 배너 (누구나 대기 중 플레이 가능) -->
+      <!-- 🎲 1인 솔로 행운의 주사위 플레이 배너 (누구나 대기 중 플레이 가능) -->
       <div class="solo-game-banner glass" onclick="Local.startYacht()">
         <div class="solo-banner-left">
           <span class="solo-icon">🎲</span>
           <div class="solo-banner-texts">
             <div class="solo-title-row">
-              <b>1인용 요트 다이스</b>
+              <b>행운의 주사위</b>
               <span class="solo-pill">대기 중 혼자 놀기</span>
               <button type="button" class="solo-banner-rule-btn" onclick="event.stopPropagation(); RuleModal.open('yacht')">📖 족보/룰</button>
             </div>
@@ -367,7 +367,7 @@ function rankTab() {
       <span class="badge gold">✨ 실시간 랭킹전</span>
     </div>
     <div class="rank-guide-banner">
-      🥇 1위 골드 오로라 · 🎲👑 요트 다이스 챔피언 휘장 · 🪳🤪 벌칙 훈장
+      🥇 1위 골드 오로라 · 🎲👑 행운의 주사위 휘장 · 🪳🤪 벌칙 훈장
     </div>
     <div class="board" style="height:${n * ROW}px">${rows}</div>
     ${isHost ? '<p class="hint">방장은 − / + 버튼으로 점수를 바로 조절할 수 있어요</p>' : ''}

@@ -72,7 +72,7 @@ GameUI.dalmuti = {
     return `
       <div class="glass center dm-intro">
         <div class="dm-crown-icon">👑</div>
-        <h2>달무티 (The Great Dalmuti)</h2>
+        <h2>계급전쟁 (Class War)</h2>
         <p class="muted">"인생은 불공평합니다!"<br/>계급 서열과 세금 징수의 명작 카드게임</p>
         <div class="dm-limit-badge">👥 3~8인 플레이 (현재 ${count}명 대기 중 ${count > 8 ? '· 8명 초과 시 관전' : ''})</div>
       </div>
@@ -82,20 +82,20 @@ GameUI.dalmuti = {
         <ul class="dm-rules-list">
           <li>
             <b class="text-gold">👑 계급 서열:</b> 
-            달무티왕(1등) ➔ 총리대신(2등) ➔ 평민 ➔ 소농노 ➔ 대농노(꼴찌)
+            대국왕(1등) ➔ 총리(2등) ➔ 평민 ➔ 하인 ➔ 노예(꼴찌)
           </li>
           <li>
             <b class="text-accent">🔄 자리 배치 & 순번:</b> 
-            매 라운드가 끝나면 등수에 따라 <b>달무티의 왼쪽부터 시계 방향으로 신분순으로 다시 앉고, 달무티부터 선</b>이 됩니다!
+            매 라운드가 끝나면 등수에 따라 <b>대국왕의 왼쪽부터 시계 방향으로 신분순으로 다시 앉고, 대국왕부터 선</b>이 됩니다!
           </li>
           <li>
             <b class="text-danger">💰 세금 징수 룰 (2라운드부터):</b>
-            대농노는 가장 좋은 카드 2장 자동 상납(달무티는 2장 하사), 
-            소농노는 가장 좋은 카드 1장 자동 상납(총리는 1장 하사)!
+            노예는 가장 좋은 카드 2장 자동 상납(대국왕은 2장 하사), 
+            하인은 가장 좋은 카드 1장 자동 상납(총리는 1장 하사)!
           </li>
           <li>
             <b class="text-gold">🃏 조커 대혁명:</b> 
-            조커 2장을 모두 손에 쥐면 <b>대혁명</b>을 일으켜 세금을 무효화할 수 있으며, 대농노가 쥐면 <b>신분이 180도 역전</b>됩니다!
+            조커 2장을 모두 손에 쥐면 <b>대혁명</b>을 일으켜 세금을 무효화할 수 있으며, 노예가 쥐면 <b>신분이 180도 역전</b>됩니다!
           </li>
         </ul>
       </div>
@@ -113,7 +113,7 @@ GameUI.dalmuti = {
         </div>
 
         <button class="btn primary xl block" data-send="game.start">
-          👑 달무티 게임 시작하기
+          👑 계급전쟁 시작하기
         </button>
       ` : `
         <div class="glass center">
@@ -147,9 +147,9 @@ GameUI.dalmuti = {
       <div class="glass dm-tax-status">
         <h4 style="margin:0 0 10px 0;">📜 자동 세금 상납 현황</h4>
         <div class="tax-row">
-          <span class="tax-from">대농노 🌾</span>
+          <span class="tax-from">노예 🌾</span>
           <span class="tax-arrow">➔ (최고 카드 2장 상납) ➔</span>
-          <span class="tax-to">달무티왕 👑</span>
+          <span class="tax-to">대국왕 👑</span>
         </div>
         ${tax.dalmutiReceived && tax.dalmutiReceived.length > 0 ? `
           <div class="tax-cards-pill">
@@ -159,7 +159,7 @@ GameUI.dalmuti = {
 
         ${tax.ministerReceived && tax.ministerReceived.length > 0 ? `
           <div class="tax-row" style="margin-top:10px;">
-            <span class="tax-from">소농노 🧹</span>
+            <span class="tax-from">하인 🧹</span>
             <span class="tax-arrow">➔ (최고 카드 1장 상납) ➔</span>
             <span class="tax-to">총리 📜</span>
           </div>
@@ -172,14 +172,14 @@ GameUI.dalmuti = {
       <!-- 내 신분별 세금 조작창 -->
       ${isDalmuti ? `
         <div class="glass dm-tax-action-box">
-          <div class="badge gold">달무티왕 👑</div>
+          <div class="badge gold">대국왕 👑</div>
           ${tax.dalmutiDone ? `
             <div class="center" style="padding:16px 0;">
-              <div class="ok-text" style="font-size:1.1rem; font-weight:bold;">✅ 대농노에게 하사할 카드 2장을 전달했습니다!</div>
+              <div class="ok-text" style="font-size:1.1rem; font-weight:bold;">✅ 노예에게 하사할 카드 2장을 전달했습니다!</div>
               <p class="muted">다른 참가자의 세금 교환이 끝나길 기다리는 중입니다…</p>
             </div>
           ` : `
-            <h3 style="margin:8px 0 4px 0;">대농노에게 하사할 카드 2장을 선택하세요</h3>
+            <h3 style="margin:8px 0 4px 0;">노예에게 하사할 카드 2장을 선택하세요</h3>
             <p class="muted">선택됨: ${this.taxSelectedCards.size}/2장</p>
 
             <div class="dm-hand-grid" style="margin:12px 0;">
@@ -197,7 +197,7 @@ GameUI.dalmuti = {
             </div>
 
             <button class="btn primary lg block" onclick="GameUI.dalmuti.sendTaxGive(2)" ${this.taxSelectedCards.size === 2 ? '' : 'disabled'}>
-              대농노에게 카드 2장 하사하기
+              노예에게 카드 2장 하사하기
             </button>
           `}
         </div>
@@ -206,11 +206,11 @@ GameUI.dalmuti = {
           <div class="badge accent">총리 📜</div>
           ${tax.ministerDone ? `
             <div class="center" style="padding:16px 0;">
-              <div class="ok-text" style="font-size:1.1rem; font-weight:bold;">✅ 소농노에게 하사할 카드 1장을 전달했습니다!</div>
+              <div class="ok-text" style="font-size:1.1rem; font-weight:bold;">✅ 하인에게 하사할 카드 1장을 전달했습니다!</div>
               <p class="muted">다른 참가자의 세금 교환이 끝나길 기다리는 중입니다…</p>
             </div>
           ` : `
-            <h3 style="margin:8px 0 4px 0;">소농노에게 하사할 카드 1장을 선택하세요</h3>
+            <h3 style="margin:8px 0 4px 0;">하인에게 하사할 카드 1장을 선택하세요</h3>
             <p class="muted">선택됨: ${this.taxSelectedCards.size}/1장</p>
 
             <div class="dm-hand-grid" style="margin:12px 0;">
@@ -228,26 +228,26 @@ GameUI.dalmuti = {
             </div>
 
             <button class="btn primary lg block" onclick="GameUI.dalmuti.sendTaxGive(1)" ${this.taxSelectedCards.size === 1 ? '' : 'disabled'}>
-              소농노에게 카드 1장 하사하기
+              하인에게 카드 1장 하사하기
             </button>
           `}
         </div>
       ` : isGPeon ? `
         <div class="glass center dm-tax-notice-box">
-          <div class="badge brown">대농노 🌾</div>
-          <h3 style="margin:10px 0 4px 0;">최고 카드 2장이 달무티에게 자동 상납되었습니다!</h3>
-          <p class="muted">달무티가 자비롭게 하사해줄 카드 2장을 기다리는 중입니다…</p>
+          <div class="badge brown">노예 🌾</div>
+          <h3 style="margin:10px 0 4px 0;">최고 카드 2장이 대국왕에게 자동 상납되었습니다!</h3>
+          <p class="muted">대국왕이 자비롭게 하사해줄 카드 2장을 기다리는 중입니다…</p>
         </div>
       ` : isLPeon ? `
         <div class="glass center dm-tax-notice-box">
-          <div class="badge orange">소농노 🧹</div>
+          <div class="badge orange">하인 🧹</div>
           <h3 style="margin:10px 0 4px 0;">최고 카드 1장이 총리에게 자동 상납되었습니다!</h3>
           <p class="muted">총리가 자비롭게 하사해줄 카드 1장을 기다리는 중입니다…</p>
         </div>
       ` : `
         <div class="glass center">
           <div class="badge muted">평민 🍺</div>
-          <p class="pulse-text" style="margin-top:10px;">달무티와 총리의 세금 징수가 진행 중입니다…</p>
+          <p class="pulse-text" style="margin-top:10px;">대국왕과 총리의 세금 징수가 진행 중입니다…</p>
           <small class="muted">평민 계급은 세금 징수/상납 대상이 아닙니다.</small>
         </div>
       `}
@@ -279,7 +279,7 @@ GameUI.dalmuti = {
         <div class="glass cr-spectator-banner">
           <div class="spec-icon">👀</div>
           <div class="spec-info">
-            <b>달무티 관전 중</b>
+            <b>계급전쟁 관전 중</b>
             <small>플레이어들의 계급 투쟁을 관전하고 있습니다.</small>
           </div>
         </div>
@@ -291,7 +291,7 @@ GameUI.dalmuti = {
           <div class="rev-icon">${G.revolution.type === 'overthrow' ? '⚡' : '🔥'}</div>
           <div class="rev-info">
             <b>${G.revolution.type === 'overthrow' ? '대반란 발생! 신분 180도 전복!' : '대혁명 발생! 이번 라운드 세금 면제!'}</b>
-            <small>${G.revolution.type === 'overthrow' ? '대농노가 조커 2장으로 혁명을 일으켜 모든 계급 서열이 완전히 뒤집혔습니다!' : '조커 2장을 가진 자의 대혁명 선언으로 이번 라운드 세금이 전격 면제되었습니다!'}</small>
+            <small>${G.revolution.type === 'overthrow' ? '노예가 조커 2장으로 혁명을 일으켜 모든 계급 서열이 완전히 뒤집혔습니다!' : '조커 2장을 가진 자의 대혁명 선언으로 이번 라운드 세금이 전격 면제되었습니다!'}</small>
           </div>
         </div>
       ` : ''}
@@ -300,7 +300,7 @@ GameUI.dalmuti = {
       <div class="glass dm-roundtable-box">
         <div class="dm-roundtable-head">
           <b>👑 제${G.currentRound}/${G.settings.totalRounds}R 계급 서열 & 좌석도</b>
-          <small class="muted">달무티부터 시계 방향 순번</small>
+          <small class="muted">대국왕부터 시계 방향 순번</small>
         </div>
         <div class="dm-seats-row">
           ${G.seats.map((seat) => {
@@ -477,7 +477,7 @@ GameUI.dalmuti = {
     return `
       <div class="glass center dm-gameover-card">
         <div class="dm-crown-icon" style="font-size:4rem;">👑</div>
-        <h1 class="text-gold" style="margin:4px 0;">최종 달무티 대관식</h1>
+        <h1 class="text-gold" style="margin:4px 0;">최종 국왕 대관식</h1>
         <p class="muted">모든 라운드가 종료되었습니다!</p>
 
         <div class="dm-winner-box">
@@ -498,7 +498,7 @@ GameUI.dalmuti = {
 
         ${isHost ? `
           <button class="btn primary lg block" data-send="game.again">
-            🔄 달무티 새 게임 시작하기
+            🔄 계급전쟁 새 게임 시작하기
           </button>
         ` : `
           <p class="pulse-text">방장이 새 게임을 준비 중입니다…</p>

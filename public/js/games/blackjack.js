@@ -116,9 +116,9 @@ const BlackjackPixiTable = {
       g.endFill();
     }
 
-    // 텍스트 추가 (카지노 레터링 워터마크)
+    // 텍스트 추가 (아케이드 레터링 워터마크)
     if (!this.bannerText) {
-      this.bannerText = new PIXI.Text('★ BLACKJACK PAYS 3 TO 2 ★\nDEALER MUST STAND ON 17', {
+      this.bannerText = new PIXI.Text('★ TARGET 21 ARCADE ★\nMASTER STANDS ON 17', {
         fontFamily: 'Pretendard, sans-serif',
         fontSize: 13,
         fontWeight: '800',
@@ -241,14 +241,17 @@ const BlackjackPixiTable = {
       dice.position.set(w / 2, h / 2);
       bg.addChild(dice);
     } else {
-      // 앞면 (깔끔한 프리미엄 카드)
+      // 앞면 (깔끔한 프리미엄 4색 심볼 카드: ⚡ 💎 🌟 🍀)
       bg.beginFill(0xffffff);
       bg.lineStyle(1.5, 0x94a3b8, 0.5);
       bg.drawRoundedRect(0, 0, w, h, 10);
       bg.endFill();
 
-      const isRed = card.color === 'red' || card.suit === '♥️' || card.suit === '♦️';
-      const color = isRed ? 0xe11d48 : 0x0f172a;
+      let color = 0x0f172a;
+      if (card.color === 'red' || card.suit === '💎' || card.suit === '♥' || card.suit === '♦') color = 0xef4444;
+      else if (card.color === 'blue' || card.suit === '⚡' || card.suit === '♠') color = 0x2563eb;
+      else if (card.color === 'gold' || card.suit === '🌟') color = 0xd97706;
+      else if (card.color === 'green' || card.suit === '🍀' || card.suit === '♣') color = 0x059669;
 
       // 좌상단 슈트 & 숫자
       const topRank = new PIXI.Text(card.rank, {
@@ -510,19 +513,19 @@ GameUI.blackjack = {
 
     if (!isHost) {
       return `<div class="glass center">
-        <div class="emoji-xl">🃏</div>
-        <h3>블랙잭 (21점 승부)</h3>
-        <p class="muted">모드: <b>${s.mode === 'bet' ? '💰 점수 배팅 모드' : '🏆 기본 점수제'}</b></p>
+        <div class="emoji-xl">🎯</div>
+        <h3>타겟 21 (합계 21 승부)</h3>
+        <p class="muted">모드: <b>${s.mode === 'bet' ? '🎯 점수 도전 모드' : '🏆 기본 점수제'}</b></p>
         <p class="pulse-text">방장이 게임을 준비하는 중입니다…</p>
       </div>`;
     }
 
     return `<div class="glass" id="bjSetupForm">
-      <h3>🃏 블랙잭 설정</h3>
+      <h3>🎯 타겟 21 설정</h3>
       <label class="field"><span>게임 모드</span>
         <select name="mode" data-change-send="game.settings" data-collect="#bjSetupForm">
-          <option value="fixed" ${s.mode === 'fixed' ? 'selected' : ''}>🏆 기본 점수제 (승리 +1점 / 블랙잭 +2점 / 버스트 -1점)</option>
-          <option value="bet" ${s.mode === 'bet' ? 'selected' : ''}>💰 배팅 모드 (1~3점 배팅, 승리 시 2배, 패배 시 상실)</option>
+          <option value="fixed" ${s.mode === 'fixed' ? 'selected' : ''}>🏆 기본 점수제 (승리 +1점 / 퍼펙트21 +2점 / 초과 -1점)</option>
+          <option value="bet" ${s.mode === 'bet' ? 'selected' : ''}>🎯 점수 도전 모드 (1~3점 도전, 승리 시 2배, 패배 시 상실)</option>
         </select>
       </label>
 
@@ -531,26 +534,26 @@ GameUI.blackjack = {
           <label class="field"><span>승리 점수</span>
             <input type="number" name="winPts" min="1" max="20" value="${s.winPts}" data-change-send="game.settings" data-collect="#bjSetupForm" />
           </label>
-          <label class="field"><span>블랙잭 점수</span>
+          <label class="field"><span>퍼펙트 21 점수</span>
             <input type="number" name="bjPts" min="1" max="30" value="${s.bjPts}" data-change-send="game.settings" data-collect="#bjSetupForm" />
           </label>
-          <label class="field"><span>버스트 감점</span>
+          <label class="field"><span>21 초과 감점</span>
             <input type="number" name="bustPts" min="0" max="20" value="${s.bustPts}" data-change-send="game.settings" data-collect="#bjSetupForm" />
           </label>
         </div>
-        <p class="hint">💡 버스트 감점 1이면 21 넘쳤을 때 -1점이 깎입니다 (0이면 무감점)</p>
+        <p class="hint">💡 21점 초과 감점이 1이면 21 넘쳤을 때 -1점이 깎입니다 (0이면 무감점)</p>
       ` : `
         <div class="glass" style="margin:8px 0; background:rgba(251,191,36,.1); border-color:rgba(251,191,36,.3);">
-          <b>💰 배팅 모드 룰</b>
+          <b>🎯 점수 도전 모드 룰</b>
           <p class="muted" style="margin:4px 0 0; font-size:.85rem;">
-            각자 1~3점을 배팅하고 승리하면 <b>배팅금의 2배</b>를 얻습니다.<br>
-            비기면 원금 회수, 지거나 버스트되면 배팅금을 모두 잃습니다.
+            각자 1~3점을 도전 점수로 걸고 승리하면 <b>도전 점수의 2배</b>를 얻습니다.<br>
+            비기면 점수 보존, 지거나 21을 초과하면 도전 점수를 잃습니다.
           </p>
         </div>
       `}
 
-      <button class="btn primary block" data-send="game.start">🎲 블랙잭 시작!</button>
-      <p class="hint">딜러(컴퓨터) 룰: 16점 이하는 무조건 히트, 17점 이상은 무조건 스탠드</p>
+      <button class="btn primary block" data-send="game.start">🎲 타겟 21 시작!</button>
+      <p class="hint">마스터(컴퓨터) 룰: 16점 이하는 무조건 카드 뽑기, 17점 이상은 무조건 멈춤</p>
     </div>`;
   },
 
@@ -560,23 +563,23 @@ GameUI.blackjack = {
     BlackjackPixiTable.cleanup();
 
     return `<div class="glass center">
-      <div class="emoji-xl">💰</div>
-      <h3>배팅할 점수를 선택하세요</h3>
-      <p class="muted">이기면 2배! 지면 배팅금을 잃습니다</p>
+      <div class="emoji-xl">🎯</div>
+      <h3>도전할 점수를 선택하세요</h3>
+      <p class="muted">마스터를 이기면 2배! 지면 도전 점수를 잃습니다</p>
 
       <div class="bet-chips">
         ${bets.map((b) => `
           <button class="bet-chip ${G.myBet === b ? 'selected' : ''}" data-send="game.bet" ${pl({ amount: b })} ${myDone ? 'disabled' : ''}>
-            🪙 ${b}점
+            ⭐ ${b}점
           </button>
         `).join('')}
       </div>
 
-      <p class="verdict-line">${myDone ? `✅ <b>${G.myBet}점</b> 배팅 완료! 다른 유저 대기 중…` : '👆 배팅할 점수 버튼을 누르세요'}</p>
+      <p class="verdict-line">${myDone ? `✅ <b>${G.myBet}점</b> 도전 완료! 다른 유저 대기 중…` : '👆 도전할 점수 버튼을 누르세요'}</p>
     </div>
 
     <div class="glass">
-      <b>배팅 현황 (${G.players.filter((p) => p.betDone).length}/${G.players.length})</b>
+      <b>도전 현황 (${G.players.filter((p) => p.betDone).length}/${G.players.length})</b>
       <div class="chips status" style="margin-top:8px;">
         ${G.players.map((p) => `
           <span class="chip ${p.betDone ? 'ok' : 'wait'}">
@@ -585,7 +588,7 @@ GameUI.blackjack = {
         `).join('')}
       </div>
       ${isHost ? `
-        <button class="btn warn block" data-send="game.forceDeal" data-confirm="미배팅 유저는 1점으로 자동 배팅하고 시작할까요?">
+        <button class="btn warn block" data-send="game.forceDeal" data-confirm="미선택 유저는 1점으로 자동 설정하고 시작할까요?">
           카드 바로 돌리기 (강제 시작)
         </button>
       ` : ''}
@@ -601,41 +604,41 @@ GameUI.blackjack = {
     this.mountPixi(G);
 
     return `
-      <!-- Pixi.js 아케이드 카지노 테이블 -->
+      <!-- Pixi.js 아케이드 테이블 -->
       <div class="bj-table-outer">
         <div id="bjPixiTableWrap" class="bj-pixi-wrapper"></div>
         <div class="bj-table-hud">
           <div class="hud-dealer">
-            <span>🤖 딜러</span>
+            <span>🤖 마스터</span>
             <small>${G.dealer.cards.some(c => c.hidden) ? '카드 1장 숨김' : `${G.dealer.scoreInfo.score}점`}</small>
           </div>
           ${myH ? `
             <div class="hud-player">
               <span>내 점수</span>
               <b class="${sc.isBust ? 'bust-txt' : sc.isBlackjack ? 'bj-txt' : ''}">
-                ${sc.isBust ? '💥 BUST' : sc.isBlackjack ? '🌟 21점' : `${sc.score}점`}
+                ${sc.isBust ? '💥 21 초과' : sc.isBlackjack ? '🌟 21점' : `${sc.score}점`}
               </b>
             </div>
           ` : ''}
         </div>
       </div>
 
-      <!-- 플레이어 컨트롤 버튼 (아케이드 히트/스탠드) -->
+      <!-- 플레이어 컨트롤 버튼 (카드 받기 / 멈추기) -->
       ${myH && !myDone ? `
         <div class="glass center" style="padding:16px;">
           <div class="two-btns big">
             <button class="btn primary xl btn-arcade-hit" data-send="game.hit">
-              🃏 히트 (한 장 더)
+              ➕ 카드 받기 (+1)
             </button>
             <button class="btn ghost xl btn-arcade-stand" data-send="game.stand">
-              ✋ 스탠드 (멈춤)
+              ✋ 멈추기 (STOP)
             </button>
           </div>
         </div>
       ` : myH ? `
         <div class="glass center" style="padding:12px;">
           <p class="pulse-text" style="margin:0;">
-            ${sc.isBust ? '💥 21점을 초과했습니다! 다른 플레이어의 턴을 기다립니다.' : '✋ 스탠드 완료! 딜러의 턴을 기다리는 중입니다.'}
+            ${sc.isBust ? '💥 21점을 초과했습니다! 다른 플레이어의 턴을 기다립니다.' : '✋ 멈춤 완료! 마스터의 턴을 기다리는 중입니다.'}
           </p>
         </div>
       ` : ''}
@@ -647,7 +650,7 @@ GameUI.blackjack = {
           ${G.players.map((p) => `
             <div class="bj-player-pill ${p.done ? (p.scoreInfo.isBust ? 'bust' : 'done') : 'waiting'}">
               <span>${esc(p.name)}</span>
-              <b>${p.scoreInfo.isBust ? '💥 버스트' : p.done ? `${p.scoreInfo.score}점 (스탠드)` : '선택 중…'}</b>
+              <b>${p.scoreInfo.isBust ? '💥 21 초과' : p.done ? `${p.scoreInfo.score}점 (멈춤)` : '선택 중…'}</b>
             </div>
           `).join('')}
         </div>
@@ -662,13 +665,13 @@ GameUI.blackjack = {
     this.mountPixi(G);
 
     return `
-      <!-- Pixi.js 아케이드 카지노 테이블 -->
+      <!-- Pixi.js 아케이드 테이블 -->
       <div class="bj-table-outer">
         <div id="bjPixiTableWrap" class="bj-pixi-wrapper"></div>
         <div class="bj-table-hud">
           <div class="hud-dealer">
-            <span>🤖 딜러 최종</span>
-            <b>${dSc.isBust ? '💥 딜러 버스트' : `${dSc.score}점`}</b>
+            <span>🤖 마스터 최종</span>
+            <b>${dSc.isBust ? '💥 마스터 초과' : `${dSc.score}점`}</b>
           </div>
         </div>
       </div>
@@ -683,11 +686,11 @@ GameUI.blackjack = {
             const isPush = r.outcome === 'push';
             const cls = isWin ? 'res-win' : isPush ? 'res-push' : 'res-lose';
             const outcomeName = {
-              blackjack: '🌟 블랙잭 대승',
+              blackjack: '🌟 퍼펙트 21 승리',
               win: '⭕ 승리',
-              push: '🤝 무승부 (Push)',
+              push: '🤝 무승부 (점수 보존)',
               lose: '❌ 패배',
-              bust: '💥 버스트',
+              bust: '💥 21 초과',
             }[r.outcome] || '종료';
 
             return `

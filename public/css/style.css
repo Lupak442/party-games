@@ -1532,7 +1532,7 @@ button.chip:hover { background: #e2e8f0; }
 .res-delta.minus { color: #e11d48; }
 
 /* ========================================================
-   바퀴벌레 포커 (Cockroach Poker)
+   벌레 거짓말 (Cockroach Bluff)
    ======================================================== */
 .cr-hero-icon { font-size: 3.5rem; animation: float 2.5s ease-in-out infinite; }
 .cr-rule-card { background: #ffffff; border: 1.5px solid #e2e8f0; }
@@ -1812,7 +1812,7 @@ button.chip:hover { background: #e2e8f0; }
 .loser-penalty { font-size: 1.2rem; font-weight: 900; color: #ef4444; }
 
 /* ========================================================
-   달무티 (The Great Dalmuti)
+   계급전쟁 (Class War)
    ======================================================== */
 .dm-container { width: 100%; max-width: 800px; margin: 0 auto; gap: 14px; }
 .dm-intro { padding: 24px 16px; text-align: center; }
@@ -1985,7 +1985,7 @@ button.chip:hover { background: #e2e8f0; }
 }
 
 /* ========================================================
-   카멜레온 (The Chameleon)
+   앞잡이 (Secret Impostor)
    ======================================================== */
 .cm-container { width: 100%; max-width: 760px; margin: 0 auto; gap: 14px; }
 .cm-intro { padding: 24px 16px; text-align: center; }
@@ -2295,7 +2295,7 @@ button.chip:hover { background: #e2e8f0; }
 }
 
 /* ========================================================
-   요트 다이스 (Yacht Dice) & 주사위 휘장 시스템 스타일링
+   행운의 주사위 (Lucky Dice) & 주사위 휘장 시스템 스타일링
    ======================================================== */
 
 /* 주사위 휘장 (방 1위 전용 골드 엠블럼) */

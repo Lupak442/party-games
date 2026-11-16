@@ -1,19 +1,20 @@
 /**
- * 블랙잭 게임 모듈
- * - 52장 표준 덱 (매 판 리셋)
- * - 딜러(서버): 16 이하는 무조건 히트, 17 이상은 무조건 스탠드
- * - 모드: 기본 점수제 (승리/블랙잭/버스트 점수 설정) vs 배팅 모드 (1~3점 배팅)
+ * 타겟 21 (Target 21) 게임 모듈
+ * - 52장 표준 덱 (매 판 리셋) - 사행성 트럼프 문양 대신 4색 파티 심볼(⚡ 💎 🌟 🍀) 사용
+ * - 마스터(서버): 16 이하는 무조건 카드 뽑기, 17 이상은 무조건 멈추기
+ * - 모드: 기본 점수제 (승리/퍼펙트21/초과 점수 설정) vs 도전 모드 (1~3점 도전 점수)
  */
 const { shuffle, nameOf, fail } = require('./util');
 
-const SUITS = ['♠', '♥', '♦', '♣'];
+const SUITS = ['⚡', '💎', '🌟', '🍀'];
+const SUIT_COLORS = { '⚡': 'blue', '💎': 'red', '🌟': 'gold', '🍀': 'green' };
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
 function newDeck() {
   const d = [];
   for (const s of SUITS) {
     for (const r of RANKS) {
-      d.push({ suit: s, rank: r, color: (s === '♥' || s === '♦') ? 'red' : 'black' });
+      d.push({ suit: s, rank: r, color: SUIT_COLORS[s] });
     }
   }
   return shuffle(d);
@@ -43,9 +44,9 @@ function handScore(cards) {
 
 module.exports = {
   id: 'blackjack',
-  name: '블랙잭',
-  icon: '🃏',
-  desc: '서버 딜러와 21점 승부! 배팅 모드 지원',
+  name: '타겟 21',
+  icon: '🎯',
+  desc: '마스터와 21점 승부! 합계 21을 노려라 (도전 모드 지원)',
   minPlayers: 1,
 
   init() {
@@ -307,39 +308,39 @@ function checkAllPlayersDone(room, g, ctx) {
     if (pInfo.isBust) {
       outcome = 'bust';
       delta = isBetMode ? -h.bet : -g.settings.bustPts;
-      desc = isBetMode ? `버스트! 배팅금 ${h.bet}점 상실` : `버스트! ${delta}점`;
+      desc = isBetMode ? `21 초과! 도전 점수 ${h.bet}점 상실` : `21 초과! ${delta}점`;
     } else if (pInfo.isBlackjack) {
       if (dInfo.isBlackjack) {
         outcome = 'push';
         delta = 0;
-        desc = '딜러도 블랙잭 (무승부 - 원금 회수)';
+        desc = '마스터도 21점 (무승부 - 점수 보존)';
       } else {
         outcome = 'blackjack';
         delta = isBetMode ? h.bet * 2 : g.settings.bjPts;
-        desc = isBetMode ? `블랙잭 대승! +${delta}점` : `블랙잭 승리! +${delta}점`;
+        desc = isBetMode ? `퍼펙트 21 승리! +${delta}점` : `퍼펙트 21 승리! +${delta}점`;
       }
     } else if (dInfo.isBust) {
-      // 딜러만 버스트
+      // 마스터만 버스트
       outcome = 'win';
       delta = isBetMode ? h.bet : g.settings.winPts;
-      desc = isBetMode ? `딜러 버스트! +${delta}점` : `승리! +${delta}점`;
+      desc = isBetMode ? `마스터 21 초과! +${delta}점` : `승리! +${delta}점`;
     } else if (pInfo.score > dInfo.score) {
       outcome = 'win';
       delta = isBetMode ? h.bet : g.settings.winPts;
-      desc = isBetMode ? `딜러보다 높음! +${delta}점` : `승리! +${delta}점`;
+      desc = isBetMode ? `마스터보다 21에 가까움! +${delta}점` : `승리! +${delta}점`;
     } else if (pInfo.score === dInfo.score) {
       outcome = 'push';
       delta = 0;
-      desc = '무승부 (원금 회수)';
+      desc = '무승부 (점수 보존)';
     } else {
       outcome = 'lose';
       delta = isBetMode ? -h.bet : 0;
-      desc = isBetMode ? `패배! 배팅금 ${h.bet}점 상실` : '패배';
+      desc = isBetMode ? `패배! 도전 점수 ${h.bet}점 상실` : '패배';
     }
 
     g.results[id] = { outcome, delta, desc, score: pInfo.score };
     if (delta !== 0) {
-      ctx.addScore(room, id, delta, `블랙잭 ${desc}`);
+      ctx.addScore(room, id, delta, `타겟 21 ${desc}`);
     }
   });
 

@@ -49,9 +49,9 @@ function checkLoser(table) {
 
 module.exports = {
   id: 'cockroach',
-  name: '바퀴벌레 포커',
+  name: '벌레 거짓말',
   icon: '🪳',
-  desc: '블러핑 심리전! 꼴찌 1명을 가려내는 벌레 모으기 (2~6인, 초과 시 관전)',
+  desc: '블러핑 심리전! 거짓말을 간파하고 벌레 카드를 피하라 (2~6인)',
   minPlayers: 2,
   maxPlayers: 6,
 
@@ -360,10 +360,10 @@ function endGame(room, g, ctx, loserId, reason, bugName) {
   };
 
   // 패배자 감점
-  ctx.addScore(room, loserId, -g.settings.losePts, `바퀴벌레 포커 꼴찌 (${reasonDesc})`);
+  ctx.addScore(room, loserId, -g.settings.losePts, `벌레 거짓말 꼴찌 (${reasonDesc})`);
 
   // 승자들 가점 (참가자 중 패배자 제외)
   g.participants.filter((id) => id !== loserId).forEach((id) => {
-    ctx.addScore(room, id, g.settings.winPts, '바퀴벌레 포커 생존 승리');
+    ctx.addScore(room, id, g.settings.winPts, '벌레 거짓말 생존 승리');
   });
 }

@@ -172,9 +172,9 @@ const TOPIC_PACKS = [
 
 module.exports = {
   id: 'chameleon',
-  name: '카멜레온',
+  name: '앞잡이',
   icon: '🦎',
-  desc: '단어를 모르는 위장자를 찾아라! 16개 단어 속 고도의 눈치 심리전 (3~12인)',
+  desc: '단어를 모르는 비밀 앞잡이를 찾아라! 16개 단어 속 고도의 눈치 심리전 (3~12인)',
   minPlayers: 3,
   maxPlayers: 12,
 
@@ -577,7 +577,7 @@ function finishRound(room, g, ctx, winner, reason) {
     const reasonText = reason === 'tie' ? '재투표 동점 도주' : reason === 'escaped' ? '위장 성공' : '비밀 단어 역전 추리';
     g.chameleonIds.forEach((id) => {
       g.roundScores[id] = chamPts;
-      ctx.addScore(room, id, chamPts, `카멜레온 승리 (${reasonText})`);
+      ctx.addScore(room, id, chamPts, `앞잡이 승리 (${reasonText})`);
     });
     g.participants.filter((id) => !g.chameleonIds.includes(id)).forEach((id) => {
       g.roundScores[id] = 0;
@@ -585,7 +585,7 @@ function finishRound(room, g, ctx, winner, reason) {
   } else {
     g.participants.filter((id) => !g.chameleonIds.includes(id)).forEach((id) => {
       g.roundScores[id] = civPts;
-      ctx.addScore(room, id, civPts, '카멜레온 검거 성공');
+      ctx.addScore(room, id, civPts, '앞잡이 검거 성공');
     });
     g.chameleonIds.forEach((id) => {
       g.roundScores[id] = 0;

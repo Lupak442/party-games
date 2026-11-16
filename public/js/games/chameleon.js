@@ -57,8 +57,8 @@ GameUI.chameleon = {
     return `
       <div class="glass center cm-intro">
         <div class="cm-chameleon-icon">🦎</div>
-        <h2>카멜레온 (The Chameleon)</h2>
-        <p class="muted">"비밀 단어를 모르는 위장자는 누구인가?"<br/>16개 단어 속 고도의 눈치와 블러핑 파티게임</p>
+        <h2>앞잡이 (Secret Impostor)</h2>
+        <p class="muted">"비밀 단어를 모르는 앞잡이는 누구인가?"<br/>16개 단어 속 고도의 눈치와 블러핑 파티게임</p>
         <div class="cm-limit-badge">👥 3~12인 플레이 (현재 ${count}명 대기 중 ${count > 12 ? '· 12명 초과 시 관전' : ''})</div>
       </div>
 
@@ -69,13 +69,13 @@ GameUI.chameleon = {
             <b class="text-accent">16개 단어 판:</b> 모든 사람에게 16개 단어가 적힌 주제 카드가 공개됩니다.
           </li>
           <li>
-            <b class="text-ok">시민 vs 카멜레온:</b> 시민은 비밀 단어를 알고 시작하지만, 카멜레온은 비밀 단어를 모른 채 위장해야 합니다!
+            <b class="text-ok">시민 vs 앞잡이:</b> 시민은 비밀 단어를 알고 시작하지만, 앞잡이는 비밀 단어를 모른 채 위장해야 합니다!
           </li>
           <li>
             <b class="text-gold">단 한 마디 힌트:</b> 순서대로 돌아가며 비밀 단어를 연상시키는 '한 단어'씩 말합니다.
           </li>
           <li>
-            <b class="text-danger">투표 & 최후의 역전 찬스:</b> 카멜레온으로 지목되더라도, 16개 단어 중 <b>비밀 단어를 맞히면 극적 역전승!</b>
+            <b class="text-danger">투표 & 최후의 역전 찬스:</b> 앞잡이로 지목되더라도, 16개 단어 중 <b>비밀 단어를 맞히면 극적 역전승!</b>
           </li>
         </ul>
       </div>
@@ -88,7 +88,7 @@ GameUI.chameleon = {
             <input type="number" name="totalRounds" value="${s.totalRounds}" min="1" max="10" />
           </label>
           <label class="field">
-            <span>카멜레온 인원</span>
+            <span>앞잡이 인원</span>
             <select name="chameleonCount">
               <option value="1" ${s.chameleonCount === 1 ? 'selected' : ''}>1명 (기본)</option>
               <option value="2" ${s.chameleonCount === 2 ? 'selected' : ''}>2명 (6인 이상 추천)</option>
@@ -114,12 +114,12 @@ GameUI.chameleon = {
         </div>
 
         <button class="btn primary xl block" data-send="game.start">
-          🦎 카멜레온 게임 시작하기
+          🦎 앞잡이 게임 시작하기
         </button>
       ` : `
         <div class="glass center">
           <p class="pulse-text">방장이 게임을 준비 중입니다…</p>
-          <small class="muted">총 ${s.totalRounds}라운드 진행 · 카멜레온 ${s.chameleonCount}명</small>
+          <small class="muted">총 ${s.totalRounds}라운드 진행 · 앞잡이 ${s.chameleonCount}명</small>
         </div>
       `}
     `;
@@ -138,7 +138,7 @@ GameUI.chameleon = {
         <div class="role-icon">${isChameleon ? '🦎' : '🕵️'}</div>
         <div class="role-desc">
           <div class="role-badge">${isChameleon ? '위장자' : '일반 시민'}</div>
-          <h2>${isChameleon ? '당신은 카멜레온입니다!' : '당신은 시민입니다!'}</h2>
+          <h2>${isChameleon ? '당신은 앞잡이입니다!' : '당신은 시민입니다!'}</h2>
           ${isChameleon ? `
             <p class="role-hint">비밀 단어를 모릅니다! 16개 단어와 앞사람 힌트를 보고 정체를 들키지 않게 둘러대세요.</p>
           ` : `
@@ -187,7 +187,7 @@ GameUI.chameleon = {
         ${isMyTurn ? `
           <div class="badge ok pulse">🎯 당신의 차례입니다!</div>
           <h3 style="margin:8px 0 4px 0;">비밀 단어를 연상시키는 '단 하나의 단어'를 입력하세요</h3>
-          <small class="muted">${G.isChameleon ? '카멜레온 팁: 그럴듯하게 둘러대어 의심을 피하세요!' : '시민 팁: 카멜레온이 눈치채지 못하도록 너무 뻔하지 않게!'}</small>
+          <small class="muted">${G.isChameleon ? '앞잡이 팁: 그럴듯하게 둘러대어 의심을 피하세요!' : '시민 팁: 앞잡이가 눈치채지 못하도록 너무 뻔하지 않게!'}</small>
         ` : `
           <div class="badge muted">힌트 발표 중</div>
           <h3 style="margin:8px 0 4px 0;"><b>${esc(activePlayer ? activePlayer.name : '')}</b> 님이 힌트를 작성 중입니다…</h3>
@@ -262,7 +262,7 @@ GameUI.chameleon = {
           <div class="revote-desc">
             <b class="text-danger">[2차 결선 재투표] 동점표(${G.revoteNotice.maxVotes}표)가 발생했습니다!</b>
             <p style="margin:2px 0 0 0;">최다 득표 동점자인 <b>${esc(G.revoteNotice.topNames.join(', '))}</b> 님만을 대상으로 재투표를 진행합니다.</p>
-            <small class="text-gold">※ 이번 재투표에서도 동점표가 나오면 카멜레온의 승리가 됩니다!</small>
+            <small class="text-gold">※ 이번 재투표에서도 동점표가 나오면 앞잡이의 승리가 됩니다!</small>
           </div>
         </div>
       ` : ''}
@@ -271,10 +271,10 @@ GameUI.chameleon = {
       <div class="glass cm-vote-panel">
         <div class="center" style="margin-bottom:12px;">
           <div class="badge ${isRevote ? 'warn' : 'danger'}">
-            ${isRevote ? '⚠️ 2차 결선 재투표' : '🔥 카멜레온 색출 투표'}
+            ${isRevote ? '⚠️ 2차 결선 재투표' : '🔥 앞잡이 색출 투표'}
           </div>
           <h2 style="margin:6px 0 2px 0;">
-            ${isRevote ? '동점자 중 진짜 카멜레온은 누구인가요?' : '누가 카멜레온인가요?'}
+            ${isRevote ? '동점자 중 진짜 앞잡이는 누구인가요?' : '누가 앞잡이인가요?'}
           </h2>
           <p class="muted">
             ${isRevote ? '동점 후보 중 1명을 선택하세요!' : '의심되는 사람 1명을 선택하고 투표하세요!'}
@@ -304,7 +304,7 @@ GameUI.chameleon = {
           </div>
 
           <button class="btn ${isRevote ? 'warn' : 'danger'} xl block" onclick="GameUI.chameleon.sendVote()" style="margin-top:14px;" ${this.selectedVote && candidateIds.includes(this.selectedVote) ? '' : 'disabled'}>
-            🗳️ ${isRevote ? '결선 재투표 제출하기' : '카멜레온으로 지목 투표하기'}
+            🗳️ ${isRevote ? '결선 재투표 제출하기' : '앞잡이로 지목 투표하기'}
           </button>
         ` : `
           <div class="muted center">관전 중에는 투표할 수 없습니다.</div>
@@ -319,7 +319,7 @@ GameUI.chameleon = {
     `;
   },
 
-  /* 5. 카멜레온의 최후 추리 단계 (guess) */
+  /* 5. 앞잡이의 최후 추리 단계 (guess) */
   p_guess({ G, me }) {
     const isChameleon = G.isChameleon;
     const vRes = G.voteResult;
@@ -328,18 +328,18 @@ GameUI.chameleon = {
       <!-- 검거 성공 알림 배너 -->
       <div class="glass center cm-guess-banner">
         <div class="emoji-xl">🎯</div>
-        <h2 class="text-danger">카멜레온 검거 성공!</h2>
+        <h2 class="text-danger">앞잡이 검거 성공!</h2>
         <p class="muted">
           최다 득표로 지목된 플레이어: <b>${esc(vRes.topNames.join(', '))}</b>
         </p>
       </div>
 
-      <!-- 카멜레온 전용 역전 추리창 -->
+      <!-- 앞잡이 전용 역전 추리창 -->
       ${isChameleon ? `
         <div class="glass cm-chameleon-guess-box">
           <div class="badge gold" style="font-size:0.9rem;">🔥 최후의 대역전 찬스!</div>
           <h3 style="margin:10px 0 4px 0;">아래 16개 단어 중 이번 라운드의 '비밀 단어'를 맞히세요!</h3>
-          <p class="muted">맞히면 카멜레온의 대역전승 (+2점)이 됩니다!</p>
+          <p class="muted">맞히면 앞잡이의 대역전승 (+2점)이 됩니다!</p>
 
           <div class="cm-guess-grid" style="margin:16px 0;">
             ${(G.topic.words || []).map((word) => {
@@ -362,9 +362,9 @@ GameUI.chameleon = {
       ` : `
         <div class="glass center" style="padding:28px 16px;">
           <div class="pulse-text" style="font-size:1.2rem; font-weight:800;">
-            🦎 카멜레온이 비밀 단어를 추리 중입니다…
+            🦎 앞잡이가 비밀 단어를 추리 중입니다…
           </div>
-          <p class="muted" style="margin-top:6px;">과연 카멜레온이 16개 단어 중 진짜 비밀 단어를 맞힐 수 있을까요?</p>
+          <p class="muted" style="margin-top:6px;">과연 앞잡이가 16개 단어 중 진짜 비밀 단어를 맞힐 수 있을까요?</p>
         </div>
       `}
 
@@ -389,16 +389,16 @@ GameUI.chameleon = {
     return `
       <div class="glass center cm-end-banner ${isChamWin ? 'win-chameleon' : 'win-civilians'}">
         <div class="emoji-xl">${isChamWin ? '🦎' : '🎉'}</div>
-        <h2>${isChamWin ? '카멜레온의 승리!' : '시민들의 완벽한 승리!'}</h2>
+        <h2>${isChamWin ? '앞잡이의 승리!' : '시민들의 완벽한 승리!'}</h2>
         <div class="cm-end-desc">
           ${reason === 'escaped' ? `
-            <b class="text-gold">카멜레온 위장 성공!</b> 시민들이 엉뚱한 사람을 지목하여 카멜레온이 무사히 탈출했습니다. (+3점)
+            <b class="text-gold">앞잡이 위장 성공!</b> 시민들이 엉뚱한 사람을 지목하여 앞잡이가 무사히 탈출했습니다. (+3점)
           ` : reason === 'tie' ? `
-            <b class="text-gold">카멜레온 승리!</b> 2차 재투표에서도 동점표가 나와 의견이 갈렸습니다. 카멜레온이 혼란을 틈타 무사히 도주했습니다! (+3점)
+            <b class="text-gold">앞잡이 승리!</b> 2차 재투표에서도 동점표가 나와 의견이 갈렸습니다. 앞잡이가 혼란을 틈타 무사히 도주했습니다! (+3점)
           ` : reason === 'caught_correct_guess' ? `
-            <b class="text-gold">카멜레온 대역전승!</b> 정체가 들통났지만 비밀 단어를 정확히 맞혔습니다! (+2점)
+            <b class="text-gold">앞잡이 대역전승!</b> 정체가 들통났지만 비밀 단어를 정확히 맞혔습니다! (+2점)
           ` : `
-            <b class="text-ok">시민 승리!</b> 카멜레온을 완벽히 검거하고 비밀 단어 방어에도 성공했습니다! (시민 각 +2점)
+            <b class="text-ok">시민 승리!</b> 앞잡이를 완벽히 검거하고 비밀 단어 방어에도 성공했습니다! (시민 각 +2점)
           `}
         </div>
 
@@ -408,7 +408,7 @@ GameUI.chameleon = {
             <span class="truth-val secret">${esc(G.secretWord)}</span>
           </div>
           <div class="truth-item">
-            <span class="truth-label">진짜 카멜레온</span>
+            <span class="truth-label">진짜 앞잡이</span>
             <span class="truth-val chameleon">🦎 ${esc(chamNames)}</span>
           </div>
         </div>
@@ -423,7 +423,7 @@ GameUI.chameleon = {
               <div class="lead-rank">${idx + 1}위</div>
               <div class="lead-name">
                 <b>${esc(r.name)}</b>
-                ${r.wasChameleon ? '<span class="badge danger" style="font-size:0.7rem; margin-left:4px;">카멜레온</span>' : ''}
+                ${r.wasChameleon ? '<span class="badge danger" style="font-size:0.7rem; margin-left:4px;">앞잡이</span>' : ''}
               </div>
               <div class="lead-pts">
                 <span class="round-plus">+${r.roundScore}점</span>
@@ -473,7 +473,7 @@ GameUI.chameleon = {
 
         ${isHost ? `
           <button class="btn primary lg block" data-send="game.again">
-            🔄 카멜레온 새 게임 시작하기
+            🔄 앞잡이 새 게임 시작하기
           </button>
         ` : `
           <p class="pulse-text">방장이 새 게임을 준비 중입니다…</p>

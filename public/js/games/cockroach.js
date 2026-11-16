@@ -59,7 +59,7 @@ GameUI.cockroach = {
     return `
       <div class="glass center cr-intro">
         <div class="cr-hero-icon">🪳</div>
-        <h2>바퀴벌레 포커</h2>
+        <h2>벌레 거짓말</h2>
         <p class="muted">블러핑 심리전! 단 한 명의 꼴찌(바보)가 될 때까지 살아남으세요.</p>
         <div class="cr-player-limit-badge">👥 2~6인 플레이 (현재 ${playerCount}명 대기 중 ${playerCount > 6 ? '· 6명 초과 시 관전' : ''})</div>
       </div>
@@ -68,7 +68,7 @@ GameUI.cockroach = {
       ${babo ? `
         <div class="glass cr-babo-hall center">
           <div class="babo-hall-title">🪳🤪 직전 바보: <b>${esc(babo.name)}</b></div>
-          <small class="muted">${esc(babo.reason || '바퀴벌레 포커 꼴찌')}</small>
+          <small class="muted">${esc(babo.reason || '벌레 거짓말 꼴찌')}</small>
         </div>
       ` : ''}
 
@@ -112,7 +112,7 @@ GameUI.cockroach = {
         </div>
 
         <button class="btn primary xl block" data-send="game.start">
-          🎮 바퀴벌레 포커 시작하기
+          🎮 벌레 거짓말 시작하기
         </button>
       ` : `
         <div class="glass center">
@@ -562,7 +562,7 @@ GameUI.cockroach = {
     return `
       <div class="glass center cr-end-card">
         <div class="cr-loser-skull">💀</div>
-        <h2 class="text-danger" style="margin:6px 0;">바퀴벌레 포커 종료!</h2>
+        <h2 class="text-danger" style="margin:6px 0;">벌레 거짓말 종료!</h2>
         
         <div class="cr-loser-box">
           <div class="loser-title">👑 이번 판의 바보 (패배자) 🪳🤪</div>

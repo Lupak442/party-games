@@ -1,20 +1,20 @@
 /**
- * 달무티 (The Great Dalmuti) 게임 모듈
+ * 계급전쟁 (Class War) 게임 모듈
  * 
  * 인생은 불공평합니다!
  * 1~12번 카드 (번호만큼의 장수) + 조커 2장 = 총 80장
  * 클라이밍 카드 게임 (같은 장수, 더 낮은 숫자)
- * 라운드 종료 시 등수에 따라 계급 부여 (달무티, 총리, 평민, 소농노, 대농노)
- * 세금 교환: 대농노 -> 달무티 (최고 카드 2장 자동 상납 / 달무티는 자유 2장 하사)
- *             소농노 -> 총리 (최고 카드 1장 자동 상납 / 총리는 자유 1장 하사)
+ * 라운드 종료 시 등수에 따라 계급 부여 (대국왕, 총리, 평민, 하인, 노예)
+ * 세금 교환: 노예 -> 대국왕 (최고 카드 2장 자동 상납 / 대국왕은 자유 2장 하사)
+ *             하인 -> 총리 (최고 카드 1장 자동 상납 / 총리는 자유 1장 하사)
  */
 const { shuffle, nameOf, fail } = require('./util');
 
 // 계급 카드 정의 (숫자, 이름, 아이콘, 장수)
 const CARDS_DEF = [
-  { rank: 1, name: '달무티왕', icon: '👑', count: 1 },
-  { rank: 2, name: '대주교', icon: '🪽', count: 2 },
-  { rank: 3, name: '총리대신', icon: '📜', count: 3 },
+  { rank: 1, name: '대국왕', icon: '👑', count: 1 },
+  { rank: 2, name: '총리', icon: '📜', count: 2 },
+  { rank: 3, name: '대주교', icon: '🪽', count: 3 },
   { rank: 4, name: '남작부인', icon: '💎', count: 4 },
   { rank: 5, name: '수도원장', icon: '⛪', count: 5 },
   { rank: 6, name: '기사', icon: '⚔️', count: 6 },
@@ -22,8 +22,8 @@ const CARDS_DEF = [
   { rank: 8, name: '석공', icon: '🧱', count: 8 },
   { rank: 9, name: '요리사', icon: '🍳', count: 9 },
   { rank: 10, name: '양치기', icon: '🐑', count: 10 },
-  { rank: 11, name: '광부', icon: '⛏️', count: 11 },
-  { rank: 12, name: '농노', icon: '🌾', count: 12 },
+  { rank: 11, name: '하인', icon: '🧹', count: 11 },
+  { rank: 12, name: '노예', icon: '🌾', count: 12 },
 ];
 
 const CARD_MAP = Object.fromEntries(CARDS_DEF.map((c) => [c.rank, c]));
@@ -31,10 +31,10 @@ CARD_MAP[13] = { rank: 13, name: '어릿광대(조커)', icon: '🃏', count: 2 
 
 // 신분 계급 타이틀 정의
 function getTitle(seatIdx, total) {
-  if (seatIdx === 0) return { id: 'dalmuti', name: '달무티왕', icon: '👑', class: 't-dalmuti' };
+  if (seatIdx === 0) return { id: 'king', name: '대국왕', icon: '👑', class: 't-dalmuti' };
   if (seatIdx === 1 && total >= 4) return { id: 'minister', name: '총리', icon: '📜', class: 't-minister' };
-  if (seatIdx === total - 1) return { id: 'greater_peon', name: '대농노', icon: '🌾', class: 't-gpeon' };
-  if (seatIdx === total - 2 && total >= 4) return { id: 'lesser_peon', name: '소농노', icon: '🧹', class: 't-lpeon' };
+  if (seatIdx === total - 1) return { id: 'slave', name: '노예', icon: '🌾', class: 't-gpeon' };
+  if (seatIdx === total - 2 && total >= 4) return { id: 'servant', name: '하인', icon: '🧹', class: 't-lpeon' };
   return { id: 'merchant', name: `평민 ${seatIdx}`, icon: '🍺', class: 't-merchant' };
 }
 
@@ -60,9 +60,9 @@ function pickBestCards(hand, count) {
 
 module.exports = {
   id: 'dalmuti',
-  name: '달무티',
+  name: '계급전쟁',
   icon: '👑',
-  desc: '인생은 불공평합니다! 계급 서열과 세금 징수의 명작 카드게임',
+  desc: '인생은 불공평합니다! 신분 상승과 세금 징수의 계급 서열 카드게임 (3~8인)',
   minPlayers: 3,
   maxPlayers: 8,
 
@@ -561,7 +561,7 @@ function endRound(room, g, ctx) {
   g.finishedOrder.forEach((pid, idx) => {
     const pts = Math.max(0, total - 1 - idx);
     g.roundScores[pid] = pts;
-    ctx.addScore(room, pid, pts, `달무티 ${g.currentRound}R ${idx + 1}위 (${getTitle(idx, total).name})`);
+    ctx.addScore(room, pid, pts, `계급전쟁 ${g.currentRound}R ${idx + 1}위 (${getTitle(idx, total).name})`);
   });
 
   if (g.currentRound >= g.settings.totalRounds) {
