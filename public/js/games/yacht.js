@@ -255,7 +255,8 @@ window.YachtGame = (function() {
             <span class="hud-lbl">방 최고 👑</span>
             <b class="hud-leader">${roomLeader ? `${esc(roomLeader.name)} (${roomLeader.score}점)` : '기록 없음'}</b>
           </div>
-          <div class="hud-col exit-col">
+          <div class="hud-col exit-col" style="display:flex; gap:4px;">
+            <button class="btn ghost sm" onclick="RuleModal.open('yacht')">📖 족보</button>
             <button class="btn ghost sm" onclick="Local.exitYacht()">✕ 나가기</button>
           </div>
         </div>

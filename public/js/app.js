@@ -279,6 +279,7 @@ function gameTab() {
             <div class="solo-title-row">
               <b>1인용 요트 다이스</b>
               <span class="solo-pill">대기 중 혼자 놀기</span>
+              <button type="button" class="solo-banner-rule-btn" onclick="event.stopPropagation(); RuleModal.open('yacht')">📖 족보/룰</button>
             </div>
             <p class="muted">13라운드 주사위 족보를 완성하고 방 최고 기록을 달성하여 <b>[🎲👑 주사위 휘장]</b>을 차지하세요!</p>
             <div class="solo-record-row">
@@ -291,10 +292,11 @@ function gameTab() {
 
       ${isHost ? '' : '<div class="glass pulse-box">⏳ 방장이 파티 게임을 시작하면 자동으로 합류합니다</div>'}
       <div class="game-grid">${st.catalog.map((g) => `
-        <button class="game-card ${isHost ? '' : 'dim'}" ${isHost ? `data-local="selectGame" data-v="${g.id}"` : 'disabled'}>
+        <div class="game-card ${isHost ? '' : 'dim'}" ${isHost ? `data-local="selectGame" data-v="${g.id}" role="button" tabindex="0"` : ''}>
+          <span class="game-card-help-btn" onclick="event.stopPropagation(); RuleModal.open('${g.id}')" title="${esc(g.name)} 룰 보기" role="button" tabindex="0">?</span>
           <span class="gi">${g.icon}</span><b>${esc(g.name)}</b><small>${esc(g.desc)}</small>
           <em>${g.minPlayers}명~ ${n < g.minPlayers ? '· 인원 부족' : ''}</em>
-        </button>`).join('')}
+        </div>`).join('')}
       </div>
       <p class="hint">모든 게임 광고 없이 0초 즉시 시작 · 새로운 게임은 앞으로 계속 추가돼요 ✨</p>
     </div>`;
@@ -310,8 +312,13 @@ function gameTab() {
     nm: (id) => (st.room.players.find((p) => p.id === id) || { name: '?' }).name
   };
   return `<div class="stack">
-    <div class="game-head"><span>${meta.icon} ${esc(meta.name)}</span>
-      ${isHost ? `<button class="btn ghost sm" data-send="room.endGame" data-confirm="게임을 끝내고 목록으로 돌아갈까요?">게임 끝내기</button>` : ''}</div>
+    <div class="game-head">
+      <div class="game-head-left">
+        <span>${meta.icon} ${esc(meta.name)}</span>
+        <button type="button" class="btn ghost sm rule-head-btn" onclick="RuleModal.open('${st.room.gameId}')">📖 룰 보기</button>
+      </div>
+      ${isHost ? `<button class="btn ghost sm" data-send="room.endGame" data-confirm="게임을 끝내고 목록으로 돌아갈까요?">게임 끝내기</button>` : ''}
+    </div>
     ${ui ? ui.render(ctx) : '<div class="glass">지원하지 않는 게임이에요</div>'}
   </div>`;
 }
