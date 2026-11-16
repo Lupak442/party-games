@@ -23,13 +23,16 @@ GameUI.liar = GameUI.fool = {
       return '<div class="glass center"><div class="emoji-xl">🕵️</div><p class="pulse-text">방장이 게임을 준비하는 중…</p></div>';
     }
 
-    const curMode = S.liarMode || G.mode || 'builtin';
+    const rawMode = S.liarMode || G.mode || 'builtin';
+    const curMode = rawMode === 'custom' ? 'custom' : 'builtin';
     const builtins = (appMeta && appMeta.builtinTopics && appMeta.builtinTopics.length)
       ? appMeta.builtinTopics
       : [
-          { name: '과일', count: 22 }, { name: '동물', count: 22 }, { name: '음식', count: 22 },
-          { name: '국내 드라마', count: 22 }, { name: '영화', count: 22 }, { name: '가수', count: 22 },
-          { name: '예능', count: 22 }, { name: '직업', count: 22 }, { name: '스포츠', count: 22 }, { name: '나라', count: 22 }
+          { name: '과일', count: 36 }, { name: '동물', count: 48 }, { name: '음식', count: 50 },
+          { name: '간식 & 디저트', count: 40 }, { name: '나라', count: 44 }, { name: '도시 & 여행지', count: 40 },
+          { name: '직업', count: 45 }, { name: '스포츠', count: 40 }, { name: '국내 드라마', count: 38 },
+          { name: '영화', count: 45 }, { name: '가수 & 아이돌', count: 50 }, { name: '예능 & 방송', count: 35 },
+          { name: '애니메이션 & 만화', count: 35 }, { name: '게임 & 캐릭터', count: 40 }, { name: '일상 사물', count: 50 }
         ];
 
     const currentTopic = G.topic || builtins[0]?.name || '과일';
@@ -39,15 +42,14 @@ GameUI.liar = GameUI.fool = {
       ${G.error ? `<p class="err">${esc(G.error)}</p>` : ''}
 
       <div class="mode-tabs">
-        <button type="button" class="mode-tab ${curMode === 'builtin' ? 'on' : ''}" data-local="setLiarMode" data-mode="builtin">📚 내장 주제</button>
-        <button type="button" class="mode-tab ${curMode === 'ai' ? 'on' : ''}" data-local="setLiarMode" data-mode="ai">🤖 AI 자동생성</button>
-        <button type="button" class="mode-tab ${curMode === 'custom' ? 'on' : ''}" data-local="setLiarMode" data-mode="custom">✍️ 직접 입력</button>
+        <button type="button" class="mode-tab ${curMode === 'builtin' ? 'on' : ''}" data-local="setLiarMode" data-mode="builtin">📚 테마 단어장</button>
+        <button type="button" class="mode-tab ${curMode === 'custom' ? 'on' : ''}" data-local="setLiarMode" data-mode="custom">✍️ 직접 출제</button>
       </div>
       <input type="hidden" name="mode" value="${curMode}" />
 
       ${curMode === 'builtin' ? `
         <div class="builtin-wrap">
-          <small class="muted">터치해서 바로 주제를 선택하세요:</small>
+          <small class="muted">터치해서 바로 테마를 선택하세요:</small>
           <div class="topic-chips">
             ${builtins.map((b) => `
               <button type="button" class="chip topic-chip ${currentTopic === b.name ? 'sel' : ''}" data-local="selectLiarBuiltin" data-topic="${esc(b.name)}">
@@ -56,22 +58,10 @@ GameUI.liar = GameUI.fool = {
             `).join('')}
           </div>
           <label class="field" style="margin-top:10px;">
-            <span>선택된 주제</span>
+            <span>선택된 테마</span>
             <input id="liarTopicInput" name="topic" value="${esc(currentTopic)}" readonly />
           </label>
-          <p class="hint">💡 <b>server/data/builtins.json</b> 파일에 단어를 마음껏 추가/수정할 수 있어요!</p>
-        </div>
-      ` : ''}
-
-      ${curMode === 'ai' ? `
-        <div class="ai-wrap">
-          <div class="ai-badge ${appMeta && appMeta.hasAi ? 'ok' : 'warn'}">
-            ${appMeta && appMeta.hasAi ? '🟢 Gemini AI 연결됨' : '🟠 GEMINI_API_KEY 미설정 (내장 주제 추천)'}
-          </div>
-          <label class="field">
-            <span>자유 주제 입력 (예: 롤 챔피언, 포켓몬, 90년대 만화 등)</span>
-            <input id="liarTopicInput" name="topic" maxlength="30" value="${esc(G.topic)}" placeholder="원하는 아무 주제나 입력" autocomplete="off" />
-          </label>
+          <p class="hint">💡 테마를 선택하면 수백 개의 엄선된 단어 중 랜덤으로 출제돼요!</p>
         </div>
       ` : ''}
 
@@ -79,7 +69,7 @@ GameUI.liar = GameUI.fool = {
         <div class="custom-wrap">
           <label class="field">
             <span>주제 이름</span>
-            <input name="topic" maxlength="30" value="${esc(G.topic || '직접 지정')}" placeholder="예: 간식" autocomplete="off" />
+            <input name="topic" maxlength="30" value="${esc(G.topic || '직접 출제')}" placeholder="예: 간식" autocomplete="off" />
           </label>
           <label class="field">
             <span>시민 단어 (라이어 제외 모두가 받는 단어)</span>

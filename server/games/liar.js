@@ -71,7 +71,7 @@ function make(cfg) {
           if (!topic) throw fail('주제를 입력하거나 선택해주세요');
           if (room.players.length < 3) throw fail('최소 3명이 필요해요');
 
-          const mode = pl.mode === 'ai' ? 'ai' : pl.mode === 'custom' ? 'custom' : 'builtin';
+          const mode = pl.mode === 'custom' ? 'custom' : 'builtin';
           const cw = trim(pl.word), cf = trim(pl.fool);
           if (mode === 'custom') {
             if (!cw) throw fail('직접 입력할 제시어를 적어주세요');

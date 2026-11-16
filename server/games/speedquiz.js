@@ -9,7 +9,7 @@ function applySettings(s, pl) {
   s.passes = clampInt(pl.passes, 0, 20, s.passes);
   s.count = clampInt(pl.count, 1, 40, s.count);
   s.topic = String(pl.topic ?? s.topic).slice(0, 30);
-  s.source = pl.source === 'custom' ? 'custom' : pl.source === 'ai' ? 'ai' : 'builtin';
+  s.source = pl.source === 'custom' ? 'custom' : 'builtin';
 }
 
 function newTurn() { return { correct: [], passed: [], idx: 0, startedAt: 0, endsAt: 0, elapsedMs: 0, done: false }; }

@@ -16,17 +16,16 @@ GameUI.speedquiz = {
 
   p_setup({ G, isHost, appMeta, room }) {
     const s = G.settings;
-    const isPremium = room && room.isPremium;
     const teams = `<div class="teams">${this.teamBox(G, 'red', isHost, 'setRep')}${this.teamBox(G, 'blue', isHost, 'setRep')}</div>`;
     const builtins = (appMeta && appMeta.builtinTopics && appMeta.builtinTopics.length)
       ? appMeta.builtinTopics
       : [
-          { name: '국내 드라마', count: 22 }, { name: '영화', count: 22 }, { name: '예능', count: 22 },
-          { name: '가수', count: 22 }, { name: '음식', count: 22 }, { name: '동물', count: 22 },
-          { name: '직업', count: 22 }, { name: '스포츠', count: 22 }
+          { name: '국내 드라마', count: 38 }, { name: '영화', count: 45 }, { name: '예능 & 방송', count: 35 },
+          { name: '가수 & 아이돌', count: 50 }, { name: '음식', count: 50 }, { name: '동물', count: 48 },
+          { name: '직업', count: 45 }, { name: '스포츠', count: 40 }, { name: '게임 & 캐릭터', count: 40 }
         ];
 
-    const sourceName = s.source === 'builtin' ? '📚 내장 주제' : s.source === 'ai' ? '🤖 AI 출제' : '✍️ 대표 직접 입력 👑';
+    const sourceName = s.source === 'custom' ? '✍️ 대표 직접 입력' : '📚 테마 단어장';
 
     if (!isHost) {
       return `<div class="glass"><h3>⚡ 팀 구성</h3>${teams}
@@ -43,37 +42,22 @@ GameUI.speedquiz = {
         <button class="${p.team === 'blue' ? 'on blue' : ''}" data-send="game.setTeam" ${pl({ id: p.id, team: 'blue' })}>🔵</button></div></div>`).join('')}</div>
       ${teams}<p class="hint">⭐ 대표는 직접 입력 모드에서 문제를 입력해요 (기본: 팀 첫 번째 사람)</p></div>
     <div class="glass" id="sqForm">
-      <div class="row-between">
-        <h3 style="margin:0;">설정</h3>
-        <span class="badge gold">👑 모든 혜택 활성화</span>
-      </div>
+      <h3>퀴즈 설정</h3>
       ${G.error ? `<p class="err">${esc(G.error)}</p>` : ''}
       <label class="field"><span>문제 출처</span>
         <select name="source" data-change-send="game.settings" data-collect="#sqForm">
-          <option value="builtin" ${s.source === 'builtin' ? 'selected' : ''}>📚 내장 주제에서 출제 (추천)</option>
-          <option value="ai" ${s.source === 'ai' ? 'selected' : ''}>🤖 AI가 주제에 맞게 자동 생성</option>
-          <option value="custom" ${s.source === 'custom' ? 'selected' : ''}>
-            ✍️ 팀 대표 직접 입력 👑
-          </option>
+          <option value="builtin" ${s.source !== 'custom' ? 'selected' : ''}>📚 테마 단어장에서 출제 (추천)</option>
+          <option value="custom" ${s.source === 'custom' ? 'selected' : ''}>✍️ 팀 대표 직접 입력</option>
         </select>
       </label>
 
-      ${s.source === 'builtin' ? `
-        <label class="field"><span>내장 주제 선택</span>
+      ${s.source !== 'custom' ? `
+        <label class="field"><span>테마 선택</span>
           <select name="topic" data-change-send="game.settings" data-collect="#sqForm">
             ${builtins.map((b) => `<option value="${esc(b.name)}" ${s.topic === b.name ? 'selected' : ''}>${esc(b.name)} (${b.count}문제 보유)</option>`).join('')}
           </select>
         </label>
-        <p class="hint">💡 <b>server/data/builtins.json</b> 파일에 단어를 추가하면 바로 반영돼요!</p>
-      ` : ''}
-
-      ${s.source === 'ai' ? `
-        <div class="ai-badge ${appMeta && appMeta.hasAi ? 'ok' : 'warn'}">
-          ${appMeta && appMeta.hasAi ? '🟢 Gemini AI 연결됨' : '🟠 GEMINI_API_KEY 미설정 (내장 주제 추천)'}
-        </div>
-        <label class="field"><span>주제 입력 (예: 국내 드라마, 90년대 가요)</span>
-          <input name="topic" maxlength="30" value="${esc(s.topic)}" data-change-send="game.settings" data-collect="#sqForm" placeholder="주제 입력" autocomplete="off" />
-        </label>
+        <p class="hint">💡 테마를 선택하면 수백 개의 문제 중 랜덤으로 출제돼요!</p>
       ` : ''}
 
       ${s.source === 'custom' ? `
@@ -91,7 +75,7 @@ GameUI.speedquiz = {
     </div>`;
   },
 
-  p_loading() { return '<div class="glass center"><div class="spinner"></div><p class="pulse-text">AI가 유명한 문제만 골라오는 중…</p></div>'; },
+  p_loading() { return '<div class="glass center"><div class="spinner"></div><p class="pulse-text">문제를 준비하는 중입니다…</p></div>'; },
 
   p_collect({ G, isHost }) {
     const r = G.rep;
